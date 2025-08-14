@@ -3,7 +3,7 @@ using WindowsMCP.Net.Services;
 using System.ComponentModel;
 using ModelContextProtocol.Server;
 
-namespace WindowsMCP.Net.Tools;
+namespace Tools.Desktop;
 
 /// <summary>
 /// MCP tool for launching applications from the Windows Start Menu.

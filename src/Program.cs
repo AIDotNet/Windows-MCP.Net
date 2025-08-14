@@ -41,6 +41,7 @@ try
     // Add the MCP services: the transport to use (stdio) and the tools to register.
     builder.Services
         .AddSingleton<IDesktopService, DesktopService>()
+        .AddSingleton<IFileSystemService, FileSystemService>()
         .AddMcpServer()
         .WithStdioServerTransport()
         .WithToolsFromAssembly(Assembly.GetExecutingAssembly())

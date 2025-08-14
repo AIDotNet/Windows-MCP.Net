@@ -3,7 +3,7 @@ using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 using System.ComponentModel;
 
-namespace WindowsMCP.Net.Tools;
+namespace Tools.Desktop;
 
 /// <summary>
 /// MCP tool for drag and drop operations.

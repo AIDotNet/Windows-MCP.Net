@@ -5,7 +5,7 @@ using System.ComponentModel;
 using HtmlAgilityPack;
 using ReverseMarkdown;
 
-namespace WindowsMCP.Net.Tools;
+namespace Tools.Desktop;
 
 /// <summary>
 /// MCP tool for web scraping.
