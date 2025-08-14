@@ -1,6 +1,6 @@
 <Project>
   <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
   <PropertyGroup>
-    <Version>0.1.6</Version>
+    <Version>0.2.0</Version>
   </PropertyGroup> 
 </Project>
