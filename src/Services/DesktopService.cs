@@ -603,6 +603,42 @@ public class DesktopService : IDesktopService
     }
 
     /// <summary>
+    /// 获取指定应用程序窗口的位置和大小信息
+    /// </summary>
+    /// <param name="name">应用程序窗口名称</param>
+    /// <returns>包含窗口信息和状态码的元组</returns>
+    public async Task<(string Response, int Status)> GetWindowInfoAsync(string name)
+    {
+        try
+        {
+            var window = FindWindowByTitle(name);
+            if (window == IntPtr.Zero)
+            {
+                return ($"Window '{name}' not found", 1);
+            }
+
+            GetWindowRect(window, out RECT rect);
+            var windowTitle = GetWindowTitle(window);
+            var width = rect.Right - rect.Left;
+            var height = rect.Bottom - rect.Top;
+            var centerX = (rect.Left + rect.Right) / 2;
+            var centerY = (rect.Top + rect.Bottom) / 2;
+            
+            var info = $"Window '{windowTitle}' information:\n" +
+                      $"Position: Left={rect.Left}, Top={rect.Top}, Right={rect.Right}, Bottom={rect.Bottom}\n" +
+                      $"Size: Width={width}, Height={height}\n" +
+                      $"Center: ({centerX},{centerY})";
+            
+            return (info, 0);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting window info for {Name}", name);
+            return ($"Error: {ex.Message}", 1);
+        }
+    }
+
+    /// <summary>
     /// 在指定位置执行滚动操作
     /// </summary>
     /// <param name="x">滚动位置的X坐标（可选，默认使用当前鼠标位置）</param>
@@ -846,10 +882,10 @@ public class DesktopService : IDesktopService
     }
 
     /// <summary>
-    /// 获取新启动应用的窗口信息，包括坐标
+    /// 获取新启动应用的窗口信息，包括坐标和大小
     /// </summary>
     /// <param name="appName">应用名称</param>
-    /// <returns>窗口坐标信息</returns>
+    /// <returns>窗口详细信息</returns>
     private string GetLaunchedWindowInfo(string appName)
     {
         try
@@ -879,10 +915,12 @@ public class DesktopService : IDesktopService
             if (foundWindow != IntPtr.Zero)
             {
                 GetWindowRect(foundWindow, out RECT rect);
+                var width = rect.Right - rect.Left;
+                var height = rect.Bottom - rect.Top;
                 var centerX = (rect.Left + rect.Right) / 2;
                 var centerY = (rect.Top + rect.Bottom) / 2;
                 
-                return $"Window '{windowTitle}' found at position: Left={rect.Left}, Top={rect.Top}, Right={rect.Right}, Bottom={rect.Bottom}, Center=({centerX},{centerY})";
+                return $"Window '{windowTitle}' information: Position(Left={rect.Left}, Top={rect.Top}, Right={rect.Right}, Bottom={rect.Bottom}), Size(Width={width}, Height={height}), Center({centerX},{centerY})";
             }
             
             return string.Empty;

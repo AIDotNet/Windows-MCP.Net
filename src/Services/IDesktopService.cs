@@ -77,6 +77,13 @@ public interface IDesktopService
     Task<(string Response, int Status)> SwitchAppAsync(string name);
 
     /// <summary>
+    /// Get window position and size information for a specific application window.
+    /// </summary>
+    /// <param name="name">The name of the application window</param>
+    /// <returns>A tuple containing the window information and status code</returns>
+    Task<(string Response, int Status)> GetWindowInfoAsync(string name);
+
+    /// <summary>
     /// Scroll at specific coordinates or current mouse position.
     /// </summary>
     /// <param name="x">X coordinate (optional)</param>
