@@ -117,6 +117,43 @@ windows-mcp-net
 }
 ```
 
+#### 使用项目源码直接运行（开发模式）
+
+**方式一：工作区配置**
+
+在项目根目录创建 `.vscode/mcp.json` 文件：
+```json
+{
+  "mcpServers": {
+    "WindowsMCP.Net-Dev": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
+      "cwd": "${workspaceFolder}",
+      "env": {}
+    }
+  }
+}
+```
+
+**方式二：用户配置**
+
+通过VS Code命令面板运行 `MCP: Open User Configuration`，添加：
+```json
+{
+  "mcpServers": {
+    "WindowsMCP.Net-Local": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
+      "env": {}
+    }
+  }
+}
+```
+
+> **注意**: 使用项目源码方式便于开发调试，修改代码后无需重新安装即可生效。VS Code 1.102+ 版本支持MCP服务器的自动发现和管理。
+
 
 ## 📖 API 文档
 
