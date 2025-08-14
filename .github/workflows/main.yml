@@ -19,7 +19,13 @@ jobs:
       - name: Pack
         working-directory: src
         run: dotnet pack --no-build --configuration Release
+      - name: Check API Key
+        run: |
+          if [ -z "${{ vars.XUZEYU }}" ]; then
+            echo "Error: XUZEYU variable is not set in repository settings"
+            exit 1
+          fi
       - name: Push NuGet package
         working-directory: src
         run: |
-          dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }}
+          dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ vars.XUZEYU }}
