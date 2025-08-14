@@ -275,6 +275,16 @@ public class DesktopService : IDesktopService
                 await process.WaitForExitAsync();
                 if (process.ExitCode == 0)
                 {
+                    // 等待应用启动完成
+                    await Task.Delay(2000);
+                    
+                    // 尝试找到新启动的窗口并获取坐标
+                    var windowInfo = GetLaunchedWindowInfo(name);
+                    if (!string.IsNullOrEmpty(windowInfo))
+                    {
+                        return ($"Successfully launched {name}. {windowInfo}", 0);
+                    }
+                    
                     return ($"Successfully launched {name}", 0);
                 }
             }
@@ -833,6 +843,55 @@ public class DesktopService : IDesktopService
         var sb = new StringBuilder(256);
         GetWindowText(hWnd, sb, sb.Capacity);
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// 获取新启动应用的窗口信息，包括坐标
+    /// </summary>
+    /// <param name="appName">应用名称</param>
+    /// <returns>窗口坐标信息</returns>
+    private string GetLaunchedWindowInfo(string appName)
+    {
+        try
+        {
+            var foundWindow = IntPtr.Zero;
+            var windowTitle = string.Empty;
+            
+            // 枚举所有可见窗口，查找包含应用名称的窗口
+            EnumWindows((hWnd, lParam) =>
+            {
+                if (IsWindowVisible(hWnd))
+                {
+                    var title = GetWindowTitle(hWnd);
+                    if (!string.IsNullOrEmpty(title) && 
+                        title != "Program Manager" &&
+                        (title.ToLower().Contains(appName.ToLower()) || 
+                         appName.ToLower().Contains(title.ToLower().Split(' ')[0])))
+                    {
+                        foundWindow = hWnd;
+                        windowTitle = title;
+                        return false; // 停止枚举
+                    }
+                }
+                return true;
+            }, IntPtr.Zero);
+            
+            if (foundWindow != IntPtr.Zero)
+            {
+                GetWindowRect(foundWindow, out RECT rect);
+                var centerX = (rect.Left + rect.Right) / 2;
+                var centerY = (rect.Top + rect.Bottom) / 2;
+                
+                return $"Window '{windowTitle}' found at position: Left={rect.Left}, Top={rect.Top}, Right={rect.Right}, Bottom={rect.Bottom}, Center=({centerX},{centerY})";
+            }
+            
+            return string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting launched window info for {AppName}", appName);
+            return string.Empty;
+        }
     }
 
     /// <summary>
