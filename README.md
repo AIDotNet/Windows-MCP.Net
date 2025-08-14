@@ -84,7 +84,7 @@
 ### 📹 演示视频
 完整的桌面自动化操作演示：
 
-![演示视频](assets/video.mp4)
+<https://github.com/AIDotNet/Windows-MCP.Net/blob/main/assets/video.mov>
 
 ## 🛠️ 技术栈
 

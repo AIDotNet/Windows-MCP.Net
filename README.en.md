@@ -84,7 +84,7 @@ Open and search web content using ScrapeTool:
 ### 📹 Demo Video
 Complete desktop automation operation demo:
 
-![Demo Video](assets/video.mp4)
+![Demo Video](assets/video.mov)
 
 ## 🛠️ Tech Stack
 
