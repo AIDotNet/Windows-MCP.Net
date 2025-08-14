@@ -100,6 +100,42 @@ public class DesktopService : IDesktopService
     [DllImport("user32.dll")]
     private static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
+    // Screenshot API imports
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetDesktopWindow();
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetDC(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+    [DllImport("gdi32.dll")]
+    private static extern IntPtr CreateCompatibleDC(IntPtr hDC);
+
+    [DllImport("gdi32.dll")]
+    private static extern IntPtr CreateCompatibleBitmap(IntPtr hDC, int nWidth, int nHeight);
+
+    [DllImport("gdi32.dll")]
+    private static extern IntPtr SelectObject(IntPtr hDC, IntPtr hGDIObj);
+
+    [DllImport("gdi32.dll")]
+    private static extern bool BitBlt(IntPtr hDestDC, int x, int y, int nWidth, int nHeight, IntPtr hSrcDC, int xSrc, int ySrc, uint dwRop);
+
+    [DllImport("gdi32.dll")]
+    private static extern bool DeleteObject(IntPtr hObject);
+
+    [DllImport("gdi32.dll")]
+    private static extern bool DeleteDC(IntPtr hDC);
+
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
+
+    // Constants for screenshot
+    private const uint SRCCOPY = 0x00CC0020;
+    private const int SM_CXSCREEN = 0;
+    private const int SM_CYSCREEN = 1;
+
     // Constants for clipboard
     private const uint CF_TEXT = 1;
     private const uint CF_UNICODETEXT = 13;
@@ -1002,6 +1038,59 @@ public class DesktopService : IDesktopService
             _ when key.Length == 1 => (ushort)char.ToUpper(key[0]),
             _ => 0
         };
+    }
+
+    /// <summary>
+    /// 异步截取屏幕并保存到临时目录
+    /// </summary>
+    /// <returns>保存的截图文件路径</returns>
+    public async Task<string> TakeScreenshotAsync()
+    {
+        try
+        {
+            // 获取屏幕尺寸
+            int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+            int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+            // 获取桌面窗口句柄和设备上下文
+            IntPtr desktopWindow = GetDesktopWindow();
+            IntPtr desktopDC = GetDC(desktopWindow);
+
+            // 创建兼容的设备上下文和位图
+            IntPtr memoryDC = CreateCompatibleDC(desktopDC);
+            IntPtr bitmap = CreateCompatibleBitmap(desktopDC, screenWidth, screenHeight);
+
+            // 选择位图到内存设备上下文
+            IntPtr oldBitmap = SelectObject(memoryDC, bitmap);
+
+            // 复制屏幕内容到位图
+            BitBlt(memoryDC, 0, 0, screenWidth, screenHeight, desktopDC, 0, 0, SRCCOPY);
+
+            // 从位图创建Image对象
+            using var image = Image.FromHbitmap(bitmap);
+            
+            // 生成文件名和路径
+            string tempPath = Path.GetTempPath();
+            string fileName = $"screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+            string filePath = Path.Combine(tempPath, fileName);
+
+            // 保存截图
+            image.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+
+            // 清理资源
+            SelectObject(memoryDC, oldBitmap);
+            DeleteObject(bitmap);
+            DeleteDC(memoryDC);
+            ReleaseDC(desktopWindow, desktopDC);
+
+            _logger.LogInformation("Screenshot saved to: {FilePath}", filePath);
+            return filePath;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error taking screenshot");
+            throw new InvalidOperationException($"Failed to take screenshot: {ex.Message}", ex);
+        }
     }
 
     /// <summary>

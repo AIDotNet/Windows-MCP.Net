@@ -138,4 +138,10 @@ public interface IDesktopService
     /// </summary>
     /// <returns>The default language</returns>
     string GetDefaultLanguage();
+
+    /// <summary>
+    /// Take a screenshot and save it to the temp directory.
+    /// </summary>
+    /// <returns>The file path of the saved screenshot</returns>
+    Task<string> TakeScreenshotAsync();
 }
