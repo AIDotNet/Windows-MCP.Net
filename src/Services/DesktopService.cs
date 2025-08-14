@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using HtmlAgilityPack;
@@ -60,6 +59,75 @@ public class DesktopService : IDesktopService
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
+    // Clipboard API imports
+    [DllImport("user32.dll")]
+    private static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+    [DllImport("user32.dll")]
+    private static extern bool CloseClipboard();
+
+    [DllImport("user32.dll")]
+    private static extern bool EmptyClipboard();
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetClipboardData(uint uFormat);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GlobalLock(IntPtr hMem);
+
+    [DllImport("kernel32.dll")]
+    private static extern bool GlobalUnlock(IntPtr hMem);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GlobalFree(IntPtr hMem);
+
+    [DllImport("kernel32.dll")]
+    private static extern UIntPtr GlobalSize(IntPtr hMem);
+
+    // Keyboard input API imports
+    [DllImport("user32.dll")]
+    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+    [DllImport("user32.dll")]
+    private static extern short VkKeyScan(char ch);
+
+    [DllImport("user32.dll")]
+    private static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+    // Constants for clipboard
+    private const uint CF_TEXT = 1;
+    private const uint CF_UNICODETEXT = 13;
+    private const uint GMEM_MOVEABLE = 0x0002;
+    private const uint GMEM_ZEROINIT = 0x0040;
+    private const uint GHND = GMEM_MOVEABLE | GMEM_ZEROINIT;
+
+    // Constants for keyboard input
+    private const uint INPUT_KEYBOARD = 1;
+    private const uint KEYEVENTF_KEYUP = 0x0002;
+    private const uint KEYEVENTF_UNICODE = 0x0004;
+    private const uint KEYEVENTF_SCANCODE = 0x0008;
+
+    // Virtual key codes
+    private const ushort VK_CONTROL = 0x11;
+    private const ushort VK_MENU = 0x12; // Alt key
+    private const ushort VK_SHIFT = 0x10;
+    private const ushort VK_RETURN = 0x0D;
+    private const ushort VK_BACK = 0x08;
+    private const ushort VK_DELETE = 0x2E;
+    private const ushort VK_TAB = 0x09;
+    private const ushort VK_ESCAPE = 0x1B;
+    private const ushort VK_SPACE = 0x20;
+    private const ushort VK_UP = 0x26;
+    private const ushort VK_DOWN = 0x28;
+    private const ushort VK_LEFT = 0x25;
+    private const ushort VK_RIGHT = 0x27;
+
     // Constants for mouse events
     private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
     private const uint MOUSEEVENTF_LEFTUP = 0x0004;
@@ -87,6 +155,53 @@ public class DesktopService : IDesktopService
         public int Top;
         public int Right;
         public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct INPUT
+    {
+        public uint Type;
+        public INPUTUNION Data;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct INPUTUNION
+    {
+        [FieldOffset(0)]
+        public MOUSEINPUT Mouse;
+        [FieldOffset(0)]
+        public KEYBDINPUT Keyboard;
+        [FieldOffset(0)]
+        public HARDWAREINPUT Hardware;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MOUSEINPUT
+    {
+        public int X;
+        public int Y;
+        public uint MouseData;
+        public uint Flags;
+        public uint Time;
+        public IntPtr ExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct KEYBDINPUT
+    {
+        public ushort VirtualKey;
+        public ushort ScanCode;
+        public uint Flags;
+        public uint Time;
+        public IntPtr ExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct HARDWAREINPUT
+    {
+        public uint Msg;
+        public ushort ParamL;
+        public ushort ParamH;
     }
 
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
@@ -221,7 +336,7 @@ public class DesktopService : IDesktopService
         }
     }
 
-    public async Task<string> ClipboardOperationAsync(string mode, string? text = null)
+    public Task<string> ClipboardOperationAsync(string mode, string? text = null)
     {
         try
         {
@@ -229,25 +344,25 @@ public class DesktopService : IDesktopService
             {
                 if (string.IsNullOrEmpty(text))
                 {
-                    return "No text provided to copy";
+                    return Task.FromResult("No text provided to copy");
                 }
-                Clipboard.SetText(text);
-                return $"Copied \"{text}\" to clipboard";
+                SetClipboardText(text);
+                return Task.FromResult($"Copied \"{text}\" to clipboard");
             }
             else if (mode.ToLower() == "paste")
             {
-                var clipboardContent = Clipboard.GetText();
-                return $"Clipboard Content: \"{clipboardContent}\"";
+                var clipboardContent = GetClipboardText();
+                return Task.FromResult($"Clipboard Content: \"{clipboardContent}\"");
             }
             else
             {
-                return "Invalid mode. Use \"copy\" or \"paste\"";
+                return Task.FromResult("Invalid mode. Use \"copy\" or \"paste\"");
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error with clipboard operation");
-            return $"Error: {ex.Message}";
+            return Task.FromResult($"Error: {ex.Message}");
         }
     }
 
@@ -303,18 +418,23 @@ public class DesktopService : IDesktopService
 
             if (clear)
             {
-                SendKeys.SendWait("^a"); // Ctrl+A
+                SendKeyboardInput(VK_CONTROL, true); // Ctrl down
+                SendKeyboardInput((ushort)'A', true); // A down
+                SendKeyboardInput((ushort)'A', false); // A up
+                SendKeyboardInput(VK_CONTROL, false); // Ctrl up
                 await Task.Delay(100);
-                SendKeys.SendWait("{BACKSPACE}");
+                SendKeyboardInput(VK_BACK, true); // Backspace down
+                SendKeyboardInput(VK_BACK, false); // Backspace up
                 await Task.Delay(100);
             }
 
-            SendKeys.SendWait(text);
+            SendTextInput(text);
 
             if (pressEnter)
             {
                 await Task.Delay(100);
-                SendKeys.SendWait("{ENTER}");
+                SendKeyboardInput(VK_RETURN, true); // Enter down
+                SendKeyboardInput(VK_RETURN, false); // Enter up
             }
 
             return $"Typed '{text}' at ({x},{y})";
@@ -445,56 +565,76 @@ public class DesktopService : IDesktopService
         }
     }
 
-    public async Task<string> ShortcutAsync(string[] keys)
+    public Task<string> ShortcutAsync(string[] keys)
     {
         try
         {
-            var keyString = string.Join("+", keys.Select(k => k.ToLower() switch
+            var modifierKeys = new List<ushort>();
+            var regularKeys = new List<ushort>();
+
+            foreach (var key in keys)
             {
-                "ctrl" => "^",
-                "alt" => "%",
-                "shift" => "+",
-                "win" => "^", // Windows key approximation
-                _ => $"{{{k.ToUpper()}}}"
-            }));
-            
-            SendKeys.SendWait(keyString);
-            return $"Pressed {string.Join("+", keys)}";
+                var vk = key.ToLower() switch
+                {
+                    "ctrl" => VK_CONTROL,
+                    "alt" => VK_MENU,
+                    "shift" => VK_SHIFT,
+                    _ => GetVirtualKeyCode(key)
+                };
+
+                if (key.ToLower() is "ctrl" or "alt" or "shift")
+                {
+                    modifierKeys.Add(vk);
+                }
+                else
+                {
+                    regularKeys.Add(vk);
+                }
+            }
+
+            // Press modifier keys down
+            foreach (var modKey in modifierKeys)
+            {
+                SendKeyboardInput(modKey, true);
+            }
+
+            // Press and release regular keys
+            foreach (var regKey in regularKeys)
+            {
+                SendKeyboardInput(regKey, true);
+                SendKeyboardInput(regKey, false);
+            }
+
+            // Release modifier keys
+            foreach (var modKey in modifierKeys)
+            {
+                SendKeyboardInput(modKey, false);
+            }
+
+            return Task.FromResult($"Pressed {string.Join("+", keys)}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending shortcut");
-            return $"Error: {ex.Message}";
+            return Task.FromResult($"Error: {ex.Message}");
         }
     }
 
-    public async Task<string> KeyAsync(string key)
+    public Task<string> KeyAsync(string key)
     {
         try
         {
-            var keyCode = key.ToLower() switch
-            {
-                "enter" => "{ENTER}",
-                "escape" => "{ESC}",
-                "tab" => "{TAB}",
-                "space" => " ",
-                "backspace" => "{BACKSPACE}",
-                "delete" => "{DELETE}",
-                "up" => "{UP}",
-                "down" => "{DOWN}",
-                "left" => "{LEFT}",
-                "right" => "{RIGHT}",
-                _ when key.StartsWith("f") && int.TryParse(key.Substring(1), out var fNum) && fNum >= 1 && fNum <= 12 => $"{{{key.ToUpper()}}}",
-                _ => key
-            };
+            var vk = GetVirtualKeyCode(key);
             
-            SendKeys.SendWait(keyCode);
-            return $"Pressed the key {key}";
+            SendKeyboardInput(vk, true); // Key down
+            SendKeyboardInput(vk, false); // Key up
+            
+            return Task.FromResult($"Pressed the key {key}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error pressing key");
-            return $"Error: {ex.Message}";
+            return Task.FromResult($"Error: {ex.Message}");
         }
     }
 
@@ -569,6 +709,161 @@ public class DesktopService : IDesktopService
         }, IntPtr.Zero);
         
         return foundWindow;
+    }
+
+    private void SetClipboardText(string text)
+    {
+        if (!OpenClipboard(IntPtr.Zero))
+            throw new InvalidOperationException("Cannot open clipboard");
+
+        try
+        {
+            EmptyClipboard();
+
+            var bytes = Encoding.Unicode.GetBytes(text + "\0");
+            var hMem = GlobalAlloc(GHND, (UIntPtr)bytes.Length);
+            if (hMem == IntPtr.Zero)
+                throw new OutOfMemoryException("Cannot allocate memory for clipboard");
+
+            var ptr = GlobalLock(hMem);
+            if (ptr == IntPtr.Zero)
+            {
+                GlobalFree(hMem);
+                throw new InvalidOperationException("Cannot lock memory for clipboard");
+            }
+
+            try
+            {
+                Marshal.Copy(bytes, 0, ptr, bytes.Length);
+            }
+            finally
+            {
+                GlobalUnlock(hMem);
+            }
+
+            if (SetClipboardData(CF_UNICODETEXT, hMem) == IntPtr.Zero)
+            {
+                GlobalFree(hMem);
+                throw new InvalidOperationException("Cannot set clipboard data");
+            }
+        }
+        finally
+        {
+            CloseClipboard();
+        }
+    }
+
+    private string GetClipboardText()
+    {
+        if (!OpenClipboard(IntPtr.Zero))
+            throw new InvalidOperationException("Cannot open clipboard");
+
+        try
+        {
+            var hMem = GetClipboardData(CF_UNICODETEXT);
+            if (hMem == IntPtr.Zero)
+                return string.Empty;
+
+            var ptr = GlobalLock(hMem);
+            if (ptr == IntPtr.Zero)
+                return string.Empty;
+
+            try
+            {
+                var size = (int)GlobalSize(hMem);
+                var bytes = new byte[size];
+                Marshal.Copy(ptr, bytes, 0, size);
+                return Encoding.Unicode.GetString(bytes).TrimEnd('\0');
+            }
+            finally
+            {
+                GlobalUnlock(hMem);
+            }
+        }
+        finally
+        {
+            CloseClipboard();
+        }
+    }
+
+    private void SendKeyboardInput(ushort virtualKey, bool keyDown)
+    {
+        var input = new INPUT
+        {
+            Type = INPUT_KEYBOARD,
+            Data = new INPUTUNION
+            {
+                Keyboard = new KEYBDINPUT
+                {
+                    VirtualKey = virtualKey,
+                    ScanCode = 0,
+                    Flags = keyDown ? 0 : KEYEVENTF_KEYUP,
+                    Time = 0,
+                    ExtraInfo = IntPtr.Zero
+                }
+            }
+        };
+
+        SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
+    }
+
+    private void SendTextInput(string text)
+    {
+        foreach (char c in text)
+        {
+            var input = new INPUT
+            {
+                Type = INPUT_KEYBOARD,
+                Data = new INPUTUNION
+                {
+                    Keyboard = new KEYBDINPUT
+                    {
+                        VirtualKey = 0,
+                        ScanCode = c,
+                        Flags = KEYEVENTF_UNICODE,
+                        Time = 0,
+                        ExtraInfo = IntPtr.Zero
+                    }
+                }
+            };
+
+            SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
+
+            // Key up
+            input.Data.Keyboard.Flags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+            SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
+        }
+    }
+
+    private ushort GetVirtualKeyCode(string key)
+    {
+        return key.ToLower() switch
+        {
+            "enter" => VK_RETURN,
+            "escape" => VK_ESCAPE,
+            "tab" => VK_TAB,
+            "space" => VK_SPACE,
+            "backspace" => VK_BACK,
+            "delete" => VK_DELETE,
+            "up" => VK_UP,
+            "down" => VK_DOWN,
+            "left" => VK_LEFT,
+            "right" => VK_RIGHT,
+            "f1" => 0x70,
+            "f2" => 0x71,
+            "f3" => 0x72,
+            "f4" => 0x73,
+            "f5" => 0x74,
+            "f6" => 0x75,
+            "f7" => 0x76,
+            "f8" => 0x77,
+            "f9" => 0x78,
+            "f10" => 0x79,
+            "f11" => 0x7A,
+            "f12" => 0x7B,
+            _ when key.Length == 1 => (ushort)char.ToUpper(key[0]),
+            _ => 0
+        };
     }
 
     public void Dispose()
