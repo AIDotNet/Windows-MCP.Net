@@ -206,12 +206,21 @@ public class DesktopService : IDesktopService
 
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
+    /// <summary>
+    /// 初始化桌面服务实例
+    /// </summary>
+    /// <param name="logger">日志记录器</param>
     public DesktopService(ILogger<DesktopService> logger)
     {
         _logger = logger;
         _httpClient = new HttpClient();
     }
 
+    /// <summary>
+    /// 异步启动指定名称的应用程序
+    /// </summary>
+    /// <param name="name">要启动的应用程序名称</param>
+    /// <returns>包含响应消息和状态码的元组</returns>
     public async Task<(string Response, int Status)> LaunchAppAsync(string name)
     {
         try
@@ -242,6 +251,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 异步执行PowerShell命令
+    /// </summary>
+    /// <param name="command">要执行的PowerShell命令</param>
+    /// <returns>包含命令输出和退出码的元组</returns>
     public async Task<(string Response, int Status)> ExecuteCommandAsync(string command)
     {
         try
@@ -275,6 +289,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 异步获取桌面状态信息，包括当前焦点窗口和所有可见窗口
+    /// </summary>
+    /// <param name="useVision">是否使用视觉识别（当前未实现）</param>
+    /// <returns>桌面状态的详细描述</returns>
     public async Task<string> GetDesktopStateAsync(bool useVision = false)
     {
         try
@@ -336,6 +355,12 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 执行剪贴板操作（复制或粘贴）
+    /// </summary>
+    /// <param name="mode">操作模式："copy"（复制）或"paste"（粘贴）</param>
+    /// <param name="text">要复制的文本（仅在复制模式下需要）</param>
+    /// <returns>操作结果描述</returns>
     public Task<string> ClipboardOperationAsync(string mode, string? text = null)
     {
         try
@@ -366,6 +391,14 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 在指定坐标位置执行鼠标点击操作
+    /// </summary>
+    /// <param name="x">点击的X坐标</param>
+    /// <param name="y">点击的Y坐标</param>
+    /// <param name="button">鼠标按钮类型："left"（左键）、"right"（右键）或"middle"（中键）</param>
+    /// <param name="clicks">点击次数：1为单击，2为双击，3为三击</param>
+    /// <returns>点击操作的结果描述</returns>
     public async Task<string> ClickAsync(int x, int y, string button = "left", int clicks = 1)
     {
         try
@@ -408,6 +441,15 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 在指定坐标位置输入文本
+    /// </summary>
+    /// <param name="x">输入位置的X坐标</param>
+    /// <param name="y">输入位置的Y坐标</param>
+    /// <param name="text">要输入的文本内容</param>
+    /// <param name="clear">是否在输入前清空现有文本</param>
+    /// <param name="pressEnter">是否在输入后按回车键</param>
+    /// <returns>输入操作的结果描述</returns>
     public async Task<string> TypeAsync(int x, int y, string text, bool clear = false, bool pressEnter = false)
     {
         try
@@ -446,6 +488,15 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 调整指定应用程序窗口的大小和位置
+    /// </summary>
+    /// <param name="name">应用程序窗口名称</param>
+    /// <param name="width">新的窗口宽度（可选）</param>
+    /// <param name="height">新的窗口高度（可选）</param>
+    /// <param name="x">新的窗口X坐标位置（可选）</param>
+    /// <param name="y">新的窗口Y坐标位置（可选）</param>
+    /// <returns>包含操作结果和状态码的元组</returns>
     public async Task<(string Response, int Status)> ResizeAppAsync(string name, int? width = null, int? height = null, int? x = null, int? y = null)
     {
         try
@@ -478,6 +529,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 切换到指定名称的应用程序窗口并将其置于前台
+    /// </summary>
+    /// <param name="name">要切换到的应用程序窗口名称</param>
+    /// <returns>包含操作结果和状态码的元组</returns>
     public async Task<(string Response, int Status)> SwitchAppAsync(string name)
     {
         try
@@ -500,6 +556,15 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 在指定位置执行滚动操作
+    /// </summary>
+    /// <param name="x">滚动位置的X坐标（可选，默认使用当前鼠标位置）</param>
+    /// <param name="y">滚动位置的Y坐标（可选，默认使用当前鼠标位置）</param>
+    /// <param name="type">滚动类型："vertical"（垂直）或"horizontal"（水平）</param>
+    /// <param name="direction">滚动方向："up"（向上）、"down"（向下）、"left"（向左）或"right"（向右）</param>
+    /// <param name="wheelTimes">滚轮滚动次数</param>
+    /// <returns>滚动操作的结果描述</returns>
     public async Task<string> ScrollAsync(int? x = null, int? y = null, string type = "vertical", string direction = "down", int wheelTimes = 1)
     {
         try
@@ -527,6 +592,14 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 执行拖拽操作，从起始坐标拖拽到目标坐标
+    /// </summary>
+    /// <param name="fromX">拖拽起始位置的X坐标</param>
+    /// <param name="fromY">拖拽起始位置的Y坐标</param>
+    /// <param name="toX">拖拽目标位置的X坐标</param>
+    /// <param name="toY">拖拽目标位置的Y坐标</param>
+    /// <returns>拖拽操作的结果描述</returns>
     public async Task<string> DragAsync(int fromX, int fromY, int toX, int toY)
     {
         try
@@ -551,6 +624,12 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 移动鼠标指针到指定坐标位置
+    /// </summary>
+    /// <param name="x">目标位置的X坐标</param>
+    /// <param name="y">目标位置的Y坐标</param>
+    /// <returns>移动操作的结果描述</returns>
     public async Task<string> MoveAsync(int x, int y)
     {
         try
@@ -565,6 +644,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 执行键盘快捷键组合
+    /// </summary>
+    /// <param name="keys">按键组合数组，支持修饰键（ctrl、alt、shift）和普通按键</param>
+    /// <returns>快捷键操作的结果描述</returns>
     public Task<string> ShortcutAsync(string[] keys)
     {
         try
@@ -620,6 +704,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 按下并释放指定的键盘按键
+    /// </summary>
+    /// <param name="key">要按下的按键名称</param>
+    /// <returns>按键操作的结果描述</returns>
     public Task<string> KeyAsync(string key)
     {
         try
@@ -638,6 +727,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 等待指定的时间（秒）
+    /// </summary>
+    /// <param name="duration">等待时间（秒）</param>
+    /// <returns>等待操作的结果描述</returns>
     public async Task<string> WaitAsync(int duration)
     {
         try
@@ -652,6 +746,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 异步抓取指定URL的网页内容并转换为Markdown格式
+    /// </summary>
+    /// <param name="url">要抓取的网页URL</param>
+    /// <returns>转换为Markdown格式的网页内容</returns>
     public async Task<string> ScrapeAsync(string url)
     {
         try
@@ -672,6 +771,10 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 获取系统默认的用户界面语言
+    /// </summary>
+    /// <returns>当前系统的默认语言显示名称</returns>
     public string GetDefaultLanguage()
     {
         try
@@ -684,6 +787,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 获取指定窗口句柄的窗口标题
+    /// </summary>
+    /// <param name="hWnd">窗口句柄</param>
+    /// <returns>窗口标题字符串</returns>
     private string GetWindowTitle(IntPtr hWnd)
     {
         var sb = new StringBuilder(256);
@@ -691,6 +799,11 @@ public class DesktopService : IDesktopService
         return sb.ToString();
     }
 
+    /// <summary>
+    /// 根据窗口标题查找窗口句柄
+    /// </summary>
+    /// <param name="title">要查找的窗口标题（支持部分匹配）</param>
+    /// <returns>找到的窗口句柄，如果未找到则返回IntPtr.Zero</returns>
     private IntPtr FindWindowByTitle(string title)
     {
         IntPtr foundWindow = IntPtr.Zero;
@@ -711,6 +824,12 @@ public class DesktopService : IDesktopService
         return foundWindow;
     }
 
+    /// <summary>
+    /// 将文本设置到系统剪贴板
+    /// </summary>
+    /// <param name="text">要复制到剪贴板的文本</param>
+    /// <exception cref="InvalidOperationException">当无法打开剪贴板或设置数据时抛出</exception>
+    /// <exception cref="OutOfMemoryException">当无法分配内存时抛出</exception>
     private void SetClipboardText(string text)
     {
         if (!OpenClipboard(IntPtr.Zero))
@@ -753,6 +872,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 从系统剪贴板获取文本内容
+    /// </summary>
+    /// <returns>剪贴板中的文本内容，如果为空则返回空字符串</returns>
+    /// <exception cref="InvalidOperationException">当无法打开剪贴板时抛出</exception>
     private string GetClipboardText()
     {
         if (!OpenClipboard(IntPtr.Zero))
@@ -786,6 +910,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 发送键盘输入事件
+    /// </summary>
+    /// <param name="virtualKey">虚拟键码</param>
+    /// <param name="keyDown">true表示按下键，false表示释放键</param>
     private void SendKeyboardInput(ushort virtualKey, bool keyDown)
     {
         var input = new INPUT
@@ -807,6 +936,10 @@ public class DesktopService : IDesktopService
         SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
     }
 
+    /// <summary>
+    /// 发送文本输入，逐字符发送Unicode字符
+    /// </summary>
+    /// <param name="text">要输入的文本</param>
     private void SendTextInput(string text)
     {
         foreach (char c in text)
@@ -835,6 +968,11 @@ public class DesktopService : IDesktopService
         }
     }
 
+    /// <summary>
+    /// 根据按键名称获取对应的虚拟键码
+    /// </summary>
+    /// <param name="key">按键名称（如"enter"、"escape"、"f1"等）</param>
+    /// <returns>对应的虚拟键码，如果未找到则返回0</returns>
     private ushort GetVirtualKeyCode(string key)
     {
         return key.ToLower() switch
@@ -866,6 +1004,9 @@ public class DesktopService : IDesktopService
         };
     }
 
+    /// <summary>
+    /// 释放资源，主要是释放HttpClient
+    /// </summary>
     public void Dispose()
     {
         _httpClient?.Dispose();
