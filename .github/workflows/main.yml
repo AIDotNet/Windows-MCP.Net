@@ -3,12 +3,11 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '**.md'
-      - '**.linq'
-      - '**.gif'
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'
   workflow_dispatch:
-  
+
 jobs:
   deploy-nuget:
     runs-on: ubuntu-latest
@@ -19,8 +18,8 @@ jobs:
         run: dotnet build --configuration Release
       - name: Pack
         working-directory: src
-        run: dotnet pack --no-build --configuration Release /p:PackageReleaseNotes="See https://github.com/xuzeyu91/Windows-MCP.Net/blob/main/CHANGELOG.md for release history."
+        run: dotnet pack --no-build --configuration Release
       - name: Push NuGet package
         working-directory: src
         run: |
-          dotnet nuget push **/*.nupkg --skip-duplicate dotnet nuget push bin/Release/*.nupkg  --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }} || true
+          dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }}
