@@ -1,5 +1,7 @@
 # Windows MCP.Net
 
+[English](README.en.md) | **中文**
+
 一个基于 .NET 的 Windows 桌面自动化 MCP (Model Context Protocol) 服务器，为 AI 助手提供与 Windows 桌面环境交互的能力。
 
 ## 🚀 功能特性
