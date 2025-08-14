@@ -21,6 +21,8 @@
 
 ### 支持的工具
 
+## Desktop 桌面操作工具
+
 | 工具名称 | 功能描述 |
 |---------|----------|
 | **LaunchTool** | 从开始菜单启动应用程序 |
@@ -39,6 +41,11 @@
 | **WaitTool** | 暂停执行指定秒数 |
 | **ScrapeTool** | 抓取网页内容并转换为Markdown格式 |
 | **ScreenshotTool** | 截取屏幕并保存到临时目录，返回图片路径 |
+
+## FileSystem 文件系统工具
+
+| 工具名称 | 功能描述 |
+|---------|----------|
 | **ReadFileTool** | 读取指定文件的内容 |
 | **WriteFileTool** | 向文件写入内容 |
 | **CreateFileTool** | 创建新文件并写入指定内容 |
@@ -50,6 +57,11 @@
 | **CreateDirectoryTool** | 创建新目录 |
 | **DeleteDirectoryTool** | 删除目录及其内容 |
 | **SearchFilesTool** | 在指定目录中搜索文件 |
+
+## OCR 图像识别工具
+
+| 工具名称 | 功能描述 |
+|---------|----------|
 | **ExtractTextFromScreenTool** | 使用OCR从整个屏幕提取文字 |
 | **ExtractTextFromRegionTool** | 使用OCR从屏幕指定区域提取文字 |
 | **FindTextOnScreenTool** | 使用OCR在屏幕上查找指定文字 |
