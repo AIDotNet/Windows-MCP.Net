@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -14,7 +14,7 @@
     <!-- Set recommended package metadata -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageId>WindowsMCP.Net</PackageId>
-    <PackageVersion>0.1.5</PackageVersion>
+    <PackageVersion>$(Version)</PackageVersion>
     <PackageTags>AI; MCP; server; stdio; Windows; Desktop; Automation</PackageTags>
     <Description>An MCP server for Windows desktop automation.</Description>
   </PropertyGroup>
