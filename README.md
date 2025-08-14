@@ -14,6 +14,7 @@
 - **窗口管理**: 调整窗口大小、位置，切换应用程序
 - **滚动操作**: 在指定坐标进行滚动操作
 - **网页抓取**: 获取网页内容并转换为 Markdown 格式
+- **截图功能**: 截取屏幕并保存到临时目录
 - **等待控制**: 在操作间添加延迟
 
 ### 支持的工具
@@ -35,6 +36,19 @@
 | **KeyTool** | 按下单个键盘按键 |
 | **WaitTool** | 暂停执行指定秒数 |
 | **ScrapeTool** | 抓取网页内容并转换为Markdown格式 |
+| **ScreenshotTool** | 截取屏幕并保存到临时目录，返回图片路径 |
+
+## 📸 演示截图
+
+### 文本输入演示
+通过 TypeTool 在记事本中自动输入文本：
+
+![文本输入演示](assets/NotepadWriting.png)
+
+### 网页搜索演示
+使用 ScrapeTool 打开并搜索网页内容：
+
+![网页搜索演示](assets/OpenWebSearch.png)
 
 ## 🛠️ 技术栈
 
@@ -155,6 +169,14 @@ windows-mcp-net
 }
 ```
 
+#### 截取屏幕
+```json
+{
+  "tool": "ScreenshotTool",
+  "parameters": {}
+}
+```
+
 ## 🏗️ 项目结构
 
 ```
@@ -191,16 +213,6 @@ src/
 | 变量名 | 描述 | 默认值 |
 |--------|------|--------|
 | `ASPNETCORE_ENVIRONMENT` | 运行环境 | `Production` |
-
-## 🤝 贡献
-
-欢迎贡献代码！请遵循以下步骤：
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
 
 ## 📝 许可证
 
