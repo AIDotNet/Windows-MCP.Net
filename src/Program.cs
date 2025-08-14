@@ -42,6 +42,7 @@ try
     builder.Services
         .AddSingleton<IDesktopService, DesktopService>()
         .AddSingleton<IFileSystemService, FileSystemService>()
+        .AddSingleton<IOcrService, OcrService>()
         .AddMcpServer()
         .WithStdioServerTransport()
         .WithToolsFromAssembly(Assembly.GetExecutingAssembly())
