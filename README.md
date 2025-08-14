@@ -107,8 +107,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/AIDotNet/WindowsMCP.Net.git
-cd WindowsMCP.Net/src
+git clone https://github.com/AIDotNet/Windows-MCP.Net.git
+cd Windows-MCP.Net/src
 
 # 构建项目
 dotnet build
@@ -120,7 +120,7 @@ dotnet run
 ### NuGet 包安装
 
 ```bash
-dotnet tool install --global WindowsMCP.Net
+dotnet tool install --global Windows-MCP.Net
 ```
 
 ## 🚀 使用方法
@@ -129,7 +129,7 @@ dotnet tool install --global WindowsMCP.Net
 
 ```bash
 # 直接运行
-dotnet run --project src/WindowsMCP.Net.csproj
+dotnet run --project src/Windows-MCP.Net.csproj
 
 # 或者使用已安装的工具
 windows-mcp-net
@@ -143,10 +143,10 @@ windows-mcp-net
 ```json
 {
     "mcpServers": {
-     "WindowsMCP.Net": {
+     "Windows-MCP.Net": {
       "type": "stdio",
       "command": "dnx",
-      "args": ["WindowsMCP.Net@", "--yes"],
+      "args": ["Windows-MCP.Net@", "--yes"],
       "env": {}
     }
     }
@@ -161,10 +161,10 @@ windows-mcp-net
 ```json
 {
   "mcpServers": {
-    "WindowsMCP.Net-Dev": {
+    "Windows-MCP.Net-Dev": {
       "type": "stdio",
       "command": "dotnet",
-      "args": ["run", "--project", "src/WindowsMCP.Net.csproj"],
+      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
       "cwd": "${workspaceFolder}",
       "env": {}
     }
@@ -178,10 +178,10 @@ windows-mcp-net
 ```json
 {
   "mcpServers": {
-    "WindowsMCP.Net-Local": {
+    "Windows-MCP.Net-Local": {
       "type": "stdio",
       "command": "dotnet",
-      "args": ["run", "--project", "src/WindowsMCP.Net.csproj"],
+      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
       "env": {}
     }
   }
@@ -267,8 +267,8 @@ src/
 │   ├── TypeTool.cs          # 输入工具
 │   └── ...                  # 其他工具
 ├── Program.cs           # 程序入口点
-├── WindowsMCP.Net.csproj   # 项目文件
-└── WindowsMCP.Net.sln      # 解决方案文件
+├── Windows-MCP.Net.csproj   # 项目文件
+└── Windows-MCP.Net.sln      # 解决方案文件
 ```
 
 ## 🔧 配置
@@ -301,7 +301,7 @@ src/
 
 如果您遇到问题或有建议，请：
 
-1. 查看 [Issues](https://github.com/xuzeyu91/WindowsMCP.Net/issues)
+1. 查看 [Issues](https://github.com/xuzeyu91/Windows-MCP.Net/issues)
 2. 创建新的 Issue
 3. 参与讨论
 
