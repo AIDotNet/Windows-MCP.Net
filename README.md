@@ -20,29 +20,29 @@
 
 | 工具名称 | 功能描述 |
 |---------|----------|
-| **LaunchTool** | 启动应用程序 |
-| **PowershellTool** | 执行 PowerShell 命令 |
-| **StateTool** | 捕获桌面状态信息 |
-| **ClipboardTool** | 剪贴板操作 |
-| **ClickTool** | 鼠标点击操作 |
-| **TypeTool** | 文本输入 |
-| **ResizeTool** | 窗口大小调整 |
-| **SwitchTool** | 应用程序切换 |
-| **ScrollTool** | 滚动操作 |
-| **DragTool** | 拖拽操作 |
-| **MoveTool** | 鼠标移动 |
-| **ShortcutTool** | 快捷键操作 |
-| **KeyTool** | 按键操作 |
-| **WaitTool** | 等待延迟 |
-| **ScrapeTool** | 网页内容抓取 |
+| **LaunchTool** | 从开始菜单启动应用程序 |
+| **PowershellTool** | 执行 PowerShell 命令并返回状态码 |
+| **StateTool** | 捕获桌面状态信息，包括应用程序和UI元素 |
+| **ClipboardTool** | 剪贴板复制和粘贴操作 |
+| **ClickTool** | 鼠标点击操作（支持左键、右键、中键，单击、双击、三击） |
+| **TypeTool** | 在指定坐标输入文本，支持清除和回车 |
+| **ResizeTool** | 调整窗口大小和位置 |
+| **SwitchTool** | 切换到指定应用程序窗口 |
+| **ScrollTool** | 在指定坐标或当前鼠标位置滚动 |
+| **DragTool** | 从源坐标拖拽到目标坐标 |
+| **MoveTool** | 移动鼠标光标到指定坐标 |
+| **ShortcutTool** | 执行键盘快捷键组合 |
+| **KeyTool** | 按下单个键盘按键 |
+| **WaitTool** | 暂停执行指定秒数 |
+| **ScrapeTool** | 抓取网页内容并转换为Markdown格式 |
 
 ## 🛠️ 技术栈
 
 - **.NET 10.0**: 基于最新的 .NET 框架
 - **Model Context Protocol**: 使用 MCP 协议进行通信
-- **Windows Forms**: 用于 Windows 桌面交互
+- **Microsoft.Extensions.Hosting**: 应用程序托管框架
 - **Serilog**: 结构化日志记录
-- **HtmlAgilityPack**: HTML 解析
+- **HtmlAgilityPack**: HTML 解析和网页抓取
 - **ReverseMarkdown**: HTML 到 Markdown 转换
 
 ## 📦 安装
@@ -134,8 +134,11 @@ windows-mcp-net
 {
   "tool": "TypeTool",
   "parameters": {
+    "x": 100,
+    "y": 200,
     "text": "Hello, World!",
-    "clear": false
+    "clear": false,
+    "pressEnter": false
   }
 }
 ```
@@ -145,7 +148,7 @@ windows-mcp-net
 {
   "tool": "StateTool",
   "parameters": {
-    "use_vision": false
+    "useVision": false
   }
 }
 ```
