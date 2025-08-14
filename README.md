@@ -120,7 +120,7 @@ dotnet run
 ### NuGet 包安装
 
 ```bash
-dotnet tool install --global WindowsMCP.Net
+dotnet tool install --global Windows-MCP.Net
 ```
 
 ## 🚀 使用方法
@@ -143,10 +143,10 @@ windows-mcp-net
 ```json
 {
     "mcpServers": {
-     "WindowsMCP.Net": {
+     "Windows-MCP.Net": {
       "type": "stdio",
       "command": "dnx",
-      "args": ["WindowsMCP.Net@", "--yes"],
+      "args": ["Windows-MCP.Net@", "--yes"],
       "env": {}
     }
     }
@@ -161,7 +161,7 @@ windows-mcp-net
 ```json
 {
   "mcpServers": {
-    "WindowsMCP.Net-Dev": {
+    "Windows-MCP.Net-Dev": {
       "type": "stdio",
       "command": "dotnet",
       "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
@@ -178,7 +178,7 @@ windows-mcp-net
 ```json
 {
   "mcpServers": {
-    "WindowsMCP.Net-Local": {
+    "Windows-MCP.Net-Local": {
       "type": "stdio",
       "command": "dotnet",
       "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
