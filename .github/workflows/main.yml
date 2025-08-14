@@ -9,12 +9,19 @@ on:
 jobs:
   deploy-nuget:
     runs-on: ubuntu-latest
+    environment: XUZEYU
     steps:
       - uses: actions/checkout@v3
       - name: Build
         run: dotnet build --configuration Release
       - name: Pack
         run: dotnet pack --no-build --configuration Release
+      - name: Check API Key
+        run: |
+          if [ -z "${{ vars.XUZEYU }}" ]; then
+            echo "Error: XUZEYU variable is not set in environment settings"
+            exit 1
+          fi
       - name: Push NuGet package
         run: |
-          dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.XUZEYU }}
+          dotnet nuget push **/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ vars.XUZEYU }}
