@@ -1,12 +1,14 @@
 using Microsoft.Extensions.Logging;
 using WindowsMCP.Net.Services;
 using System.ComponentModel;
+using ModelContextProtocol.Server;
 
 namespace WindowsMCP.Net.Tools;
 
 /// <summary>
 /// MCP tool for launching applications from the Windows Start Menu.
 /// </summary>
+[McpServerToolType]
 public class LaunchTool
 {
     private readonly IDesktopService _desktopService;
@@ -23,7 +25,7 @@ public class LaunchTool
     /// </summary>
     /// <param name="name">The name of the application to launch (e.g., "notepad", "calculator", "chrome")</param>
     /// <returns>Result message indicating success or failure</returns>
-
+    [McpServerTool, Description("Launch an application from the Windows Start Menu by name")]
     public async Task<string> LaunchAppAsync(
         [Description("The name of the application to launch")] string name)
     {

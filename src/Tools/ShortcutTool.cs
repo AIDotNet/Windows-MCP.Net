@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for executing keyboard shortcuts.
 /// </summary>
+[McpServerToolType]
 public class ShortcutTool
 {
     private readonly IDesktopService _desktopService;
@@ -24,7 +25,7 @@ public class ShortcutTool
     /// </summary>
     /// <param name="keys">Array of keys to press simultaneously (e.g., ["ctrl", "c"] for copy, ["alt", "tab"] for app switching, ["win", "r"] for Run dialog)</param>
     /// <returns>Result message</returns>
-
+    [McpServerTool, Description("Execute keyboard shortcuts using key combinations")]
     public async Task<string> ShortcutAsync(
         [Description("Array of keys to press simultaneously")] string[] keys)
     {

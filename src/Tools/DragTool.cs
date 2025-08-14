@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for drag and drop operations.
 /// </summary>
+[McpServerToolType]
 public class DragTool
 {
     private readonly IDesktopService _desktopService;
@@ -27,7 +28,7 @@ public class DragTool
     /// <param name="toX">Destination X coordinate</param>
     /// <param name="toY">Destination Y coordinate</param>
     /// <returns>Result message</returns>
-
+    [McpServerTool, Description("Drag and drop operation from source coordinates to destination coordinates")]
     public async Task<string> DragAsync(
         [Description("Source X coordinate")] int fromX,
         [Description("Source Y coordinate")] int fromY,

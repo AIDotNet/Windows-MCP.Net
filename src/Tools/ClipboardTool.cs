@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for clipboard operations.
 /// </summary>
+[McpServerToolType]
 public class ClipboardTool
 {
     private readonly IDesktopService _desktopService;
@@ -23,10 +24,10 @@ public class ClipboardTool
     /// Copy text to clipboard or retrieve current clipboard content.
     /// </summary>
     /// <param name="mode">The mode: "copy" to copy text, "paste" to retrieve clipboard content</param>
-    /// <param name="text">The text to copy (required for copy mode)</param>
-    /// <returns>Result message</returns>
-
-    public async Task<string> ClipboardOperationAsync(
+    /// <param name="text">Text to copy (only required when mode is "copy")</param>
+    /// <returns>Result message or clipboard content</returns>
+    [McpServerTool, Description("Copy text to clipboard or retrieve current clipboard content")]
+    public async Task<string> ClipboardAsync(
         [Description("The mode: \"copy\" to copy text, \"paste\" to retrieve clipboard content")] string mode,
         [Description("The text to copy (required for copy mode)")] string? text = null)
     {

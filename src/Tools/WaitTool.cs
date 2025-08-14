@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for pausing execution.
 /// </summary>
+[McpServerToolType]
 public class WaitTool
 {
     private readonly IDesktopService _desktopService;
@@ -24,7 +25,7 @@ public class WaitTool
     /// </summary>
     /// <param name="duration">Duration in seconds to wait</param>
     /// <returns>Result message</returns>
-
+    [McpServerTool, Description("Pause execution for specified duration in seconds")]
     public async Task<string> WaitAsync(
         [Description("Duration in seconds to wait")] int duration)
     {

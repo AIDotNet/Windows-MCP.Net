@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for mouse click operations.
 /// </summary>
+[McpServerToolType]
 public class ClickTool
 {
     private readonly IDesktopService _desktopService;
@@ -27,7 +28,7 @@ public class ClickTool
     /// <param name="button">Mouse button: "left", "right", or "middle"</param>
     /// <param name="clicks">Number of clicks (1 for single, 2 for double, 3 for triple)</param>
     /// <returns>Result message</returns>
-
+    [McpServerTool, Description("Click on UI elements at specific coordinates")]
     public async Task<string> ClickAsync(
         [Description("X coordinate")] int x,
         [Description("Y coordinate")] int y,

@@ -5,6 +5,7 @@ using Serilog.Events;
 using Serilog;
 using WindowsMCP.Net.Services;
 using WindowsMCP.Net.Tools;
+using System.Reflection;
 
 /// <summary>
 /// Main entry point for the Windows MCP Server application.
@@ -42,21 +43,7 @@ try
         .AddSingleton<IDesktopService, DesktopService>()
         .AddMcpServer()
         .WithStdioServerTransport()
-        .WithTools<LaunchTool>()
-        .WithTools<PowershellTool>()
-        .WithTools<StateTool>()
-        .WithTools<ClipboardTool>()
-        .WithTools<ClickTool>()
-        .WithTools<TypeTool>()
-        .WithTools<ResizeTool>()
-        .WithTools<SwitchTool>()
-        .WithTools<ScrollTool>()
-        .WithTools<DragTool>()
-        .WithTools<MoveTool>()
-        .WithTools<ShortcutTool>()
-        .WithTools<KeyTool>()
-        .WithTools<WaitTool>()
-        .WithTools<ScrapeTool>()
+        .WithToolsFromAssembly(Assembly.GetExecutingAssembly())
         ;
 
     await builder.Build().RunAsync();

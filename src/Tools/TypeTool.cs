@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for typing text into input fields.
 /// </summary>
+[McpServerToolType]
 public class TypeTool
 {
     private readonly IDesktopService _desktopService;
@@ -28,7 +29,7 @@ public class TypeTool
     /// <param name="clear">Whether to clear existing text first</param>
     /// <param name="pressEnter">Whether to press Enter after typing</param>
     /// <returns>Result message</returns>
-
+    [McpServerTool, Description("Type text into input fields, text areas, or focused elements")]
     public async Task<string> TypeAsync(
         [Description("X coordinate of the target element")] int x,
         [Description("Y coordinate of the target element")] int y,

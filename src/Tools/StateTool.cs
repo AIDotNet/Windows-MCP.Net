@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for capturing comprehensive desktop state.
 /// </summary>
+[McpServerToolType]
 public class StateTool
 {
     private readonly IDesktopService _desktopService;
@@ -25,7 +26,7 @@ public class StateTool
     /// </summary>
     /// <param name="useVision">Whether to include visual screenshot when available</param>
     /// <returns>Desktop state information</returns>
-
+    [McpServerTool, Description("Capture comprehensive desktop state including applications, UI elements, and content")]
     public async Task<string> GetDesktopStateAsync(
         [Description("Whether to include visual screenshot when available")] bool useVision = false)
     {

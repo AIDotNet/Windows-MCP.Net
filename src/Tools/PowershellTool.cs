@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for executing PowerShell commands.
 /// </summary>
+[McpServerToolType]
 public class PowershellTool
 {
     private readonly IDesktopService _desktopService;
@@ -24,7 +25,7 @@ public class PowershellTool
     /// </summary>
     /// <param name="command">The PowerShell command to execute</param>
     /// <returns>Command output with status code</returns>
-
+    [McpServerTool, Description("Execute PowerShell commands and return the output with status code")]
     public async Task<string> ExecuteCommandAsync(
         [Description("The PowerShell command to execute")] string command)
     {

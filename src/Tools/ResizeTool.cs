@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for resizing and moving application windows.
 /// </summary>
+[McpServerToolType]
 public class ResizeTool
 {
     private readonly IDesktopService _desktopService;
@@ -28,7 +29,7 @@ public class ResizeTool
     /// <param name="x">New X position (optional)</param>
     /// <param name="y">New Y position (optional)</param>
     /// <returns>Result message</returns>
-
+    [McpServerTool, Description("Resize a specific application window to specific size or move to specific location")]
     public async Task<string> ResizeAppAsync(
         [Description("The name of the application window")] string name,
         [Description("New width (optional)")] int? width = null,

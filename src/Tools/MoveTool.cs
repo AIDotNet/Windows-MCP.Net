@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for moving mouse cursor.
 /// </summary>
+[McpServerToolType]
 public class MoveTool
 {
     private readonly IDesktopService _desktopService;
@@ -25,7 +26,7 @@ public class MoveTool
     /// <param name="x">X coordinate</param>
     /// <param name="y">Y coordinate</param>
     /// <returns>Result message</returns>
-
+    [McpServerTool, Description("Move mouse cursor to specific coordinates without clicking")]
     public async Task<string> MoveAsync(
         [Description("X coordinate")] int x,
         [Description("Y coordinate")] int y)

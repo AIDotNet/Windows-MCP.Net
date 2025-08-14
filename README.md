@@ -87,12 +87,29 @@ windows-mcp-net
 
 在您的 MCP 客户端配置中添加以下配置：
 
+#### 使用全局安装的工具（推荐）
 ```json
 {
   "mcpServers": {
-    "windows-mcp-net": {
-      "command": "windows-mcp-net",
-      "args": []
+    "WindowsMCP.Net": {
+      "type": "stdio",
+      "command": "Windows-MCP.Net",
+      "args": [],
+      "env": {}
+    }
+  }
+}
+```
+
+#### 使用dotnet run
+```json
+{
+  "mcpServers": {
+    "WindowsMCP.Net": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "path/to/Windows-MCP.Net/src/Windows-MCP.Net.csproj"],
+      "env": {}
     }
   }
 }

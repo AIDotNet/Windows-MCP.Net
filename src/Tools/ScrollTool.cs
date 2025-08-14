@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for scrolling operations.
 /// </summary>
+[McpServerToolType]
 public class ScrollTool
 {
     private readonly IDesktopService _desktopService;
@@ -28,7 +29,7 @@ public class ScrollTool
     /// <param name="direction">Scroll direction: "up", "down", "left", or "right"</param>
     /// <param name="wheelTimes">Number of wheel scrolls (1 wheel = ~3-5 lines)</param>
     /// <returns>Result message</returns>
-
+    [McpServerTool, Description("Scroll at specific coordinates or current mouse position")]
     public async Task<string> ScrollAsync(
         [Description("X coordinate (optional, uses current mouse position if not provided)")] int? x = null,
         [Description("Y coordinate (optional, uses current mouse position if not provided)")] int? y = null,

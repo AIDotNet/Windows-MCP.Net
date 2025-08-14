@@ -8,6 +8,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for switching to application windows.
 /// </summary>
+[McpServerToolType]
 public class SwitchTool
 {
     private readonly IDesktopService _desktopService;
@@ -24,7 +25,7 @@ public class SwitchTool
     /// </summary>
     /// <param name="name">The name of the application window</param>
     /// <returns>Result message</returns>
-
+    [McpServerTool, Description("Switch to a specific application window and bring it to foreground")]
     public async Task<string> SwitchAppAsync(
         [Description("The name of the application window")] string name)
     {

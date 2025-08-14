@@ -10,6 +10,7 @@ namespace WindowsMCP.Net.Tools;
 /// <summary>
 /// MCP tool for web scraping.
 /// </summary>
+[McpServerToolType]
 public class ScrapeTool
 {
     private readonly IDesktopService _desktopService;
@@ -26,7 +27,7 @@ public class ScrapeTool
     /// </summary>
     /// <param name="url">The full URL including protocol (http/https) to scrape</param>
     /// <returns>Structured text content in markdown format</returns>
-
+    [McpServerTool, Description("Fetch and convert webpage content to markdown format")]
     public async Task<string> ScrapeAsync(
         [Description("The full URL including protocol (http/https) to scrape")] string url)
     {
