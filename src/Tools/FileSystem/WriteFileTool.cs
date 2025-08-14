@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for writing content to files.
 /// </summary>
+[McpServerToolType]
 public class WriteFileTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -31,7 +33,7 @@ public class WriteFileTool
     /// <param name="content">要写入的内容</param>
     /// <param name="append">是否追加到现有内容，默认为false（覆盖）</param>
     /// <returns>包含操作结果的JSON字符串</returns>
-    [Description("Write content to a file")]
+    [McpServerTool, Description("Write content to a file")]
     public async Task<string> WriteFileAsync(
         [Description("The file path to write to")] string path,
         [Description("The content to write to the file")] string content,

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for creating new files with specified content.
 /// </summary>
+[McpServerToolType]
 public class CreateFileTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -30,7 +32,7 @@ public class CreateFileTool
     /// <param name="path">文件路径</param>
     /// <param name="content">文件内容，默认为空字符串</param>
     /// <returns>包含操作结果的JSON字符串</returns>
-    [Description("Create a new file with specified content")]
+    [McpServerTool, Description("Create a new file with specified content")]
     public async Task<string> CreateFileAsync(
         [Description("The file path to create")] string path,
         [Description("The content to write to the file")] string content = "")

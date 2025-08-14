@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for deleting directories.
 /// </summary>
+[McpServerToolType]
 public class DeleteDirectoryTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -30,7 +32,7 @@ public class DeleteDirectoryTool
     /// <param name="path">目录路径</param>
     /// <param name="recursive">是否递归删除，默认为false</param>
     /// <returns>包含操作结果的JSON字符串</returns>
-    [Description("Delete a directory")]
+    [McpServerTool, Description("Delete a directory")]
     public async Task<string> DeleteDirectoryAsync(
         [Description("The directory path to delete")] string path,
         [Description("Whether to delete recursively (including all contents)")] bool recursive = false)

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for moving files.
 /// </summary>
+[McpServerToolType]
 public class MoveFileTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -31,7 +33,7 @@ public class MoveFileTool
     /// <param name="destination">目标文件路径</param>
     /// <param name="overwrite">是否覆盖已存在的文件，默认为false</param>
     /// <returns>包含操作结果的JSON字符串</returns>
-    [Description("Move a file from source to destination")]
+    [McpServerTool, Description("Move a file from source to destination")]
     public async Task<string> MoveFileAsync(
         [Description("The source file path")] string source,
         [Description("The destination file path")] string destination,

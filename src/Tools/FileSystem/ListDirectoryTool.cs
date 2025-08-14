@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for listing directory contents.
 /// </summary>
+[McpServerToolType]
 public class ListDirectoryTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -32,7 +34,7 @@ public class ListDirectoryTool
     /// <param name="includeDirectories">是否包含目录，默认为true</param>
     /// <param name="recursive">是否递归列出，默认为false</param>
     /// <returns>包含目录列表的JSON字符串</returns>
-    [Description("List contents of a directory")]
+    [McpServerTool, Description("List contents of a directory")]
     public async Task<string> ListDirectoryAsync(
         [Description("The directory path to list")] string path,
         [Description("Whether to include files in the listing")] bool includeFiles = true,

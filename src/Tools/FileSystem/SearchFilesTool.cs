@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for searching files by name pattern or extension.
 /// </summary>
+[McpServerToolType]
 public class SearchFilesTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -31,7 +33,7 @@ public class SearchFilesTool
     /// <param name="pattern">搜索模式（支持通配符 * 和 ?）</param>
     /// <param name="recursive">是否递归搜索，默认为false</param>
     /// <returns>包含搜索结果的JSON字符串</returns>
-    [Description("Search for files by name pattern")]
+    [McpServerTool, Description("Search for files by name pattern")]
     public async Task<string> SearchFilesByNameAsync(
         [Description("The directory to search in")] string directory,
         [Description("The search pattern (supports wildcards * and ?)")] string pattern,
@@ -79,7 +81,7 @@ public class SearchFilesTool
     /// <param name="extension">文件扩展名（可以带或不带点）</param>
     /// <param name="recursive">是否递归搜索，默认为false</param>
     /// <returns>包含搜索结果的JSON字符串</returns>
-    [Description("Search for files by extension")]
+    [McpServerTool, Description("Search for files by extension")]
     public async Task<string> SearchFilesByExtensionAsync(
         [Description("The directory to search in")] string directory,
         [Description("The file extension (with or without dot)")] string extension,

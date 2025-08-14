@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for reading file content.
 /// </summary>
+[McpServerToolType]
 public class ReadFileTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -29,7 +31,7 @@ public class ReadFileTool
     /// </summary>
     /// <param name="path">文件路径</param>
     /// <returns>包含文件内容的JSON字符串</returns>
-    [Description("Read content from a file")]
+    [McpServerTool, Description("Read content from a file")]
     public async Task<string> ReadFileAsync(
         [Description("The file path to read")] string path)
     {

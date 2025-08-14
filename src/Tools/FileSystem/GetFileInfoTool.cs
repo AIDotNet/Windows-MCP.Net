@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for getting file or directory information.
 /// </summary>
+[McpServerToolType]
 public class GetFileInfoTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -29,7 +31,7 @@ public class GetFileInfoTool
     /// </summary>
     /// <param name="path">文件或目录路径</param>
     /// <returns>包含文件/目录信息的JSON字符串</returns>
-    [Description("Get information about a file or directory")]
+    [McpServerTool, Description("Get information about a file or directory")]
     public async Task<string> GetFileInfoAsync(
         [Description("The file or directory path to get information about")] string path)
     {

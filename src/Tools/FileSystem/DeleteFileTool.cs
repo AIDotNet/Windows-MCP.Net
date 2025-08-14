@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for deleting files.
 /// </summary>
+[McpServerToolType]
 public class DeleteFileTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -29,7 +31,7 @@ public class DeleteFileTool
     /// </summary>
     /// <param name="path">要删除的文件路径</param>
     /// <returns>包含操作结果的JSON字符串</returns>
-    [Description("Delete a file")]
+    [McpServerTool, Description("Delete a file")]
     public async Task<string> DeleteFileAsync(
         [Description("The file path to delete")] string path)
     {

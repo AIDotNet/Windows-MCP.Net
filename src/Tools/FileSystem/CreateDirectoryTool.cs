@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using WindowsMCP.Net.Services;
 
 namespace Tools.FileSystem;
@@ -8,6 +9,7 @@ namespace Tools.FileSystem;
 /// <summary>
 /// Tool for creating directories.
 /// </summary>
+[McpServerToolType]
 public class CreateDirectoryTool
 {
     private readonly IFileSystemService _fileSystemService;
@@ -30,7 +32,7 @@ public class CreateDirectoryTool
     /// <param name="path">目录路径</param>
     /// <param name="createParents">是否创建父目录，默认为true</param>
     /// <returns>包含操作结果的JSON字符串</returns>
-    [Description("Create a new directory")]
+    [McpServerTool, Description("Create a new directory")]
     public async Task<string> CreateDirectoryAsync(
         [Description("The directory path to create")] string path,
         [Description("Whether to create parent directories if they don't exist")] bool createParents = true)
