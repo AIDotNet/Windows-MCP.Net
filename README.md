@@ -79,6 +79,11 @@
 
 ![网页搜索演示](assets/OpenWebSearch.png)
 
+### 📹 演示视频
+完整的桌面自动化操作演示：
+
+![演示视频](assets/video.mp4)
+
 ## 🛠️ 技术栈
 
 - **.NET 10.0**: 基于最新的 .NET 框架
