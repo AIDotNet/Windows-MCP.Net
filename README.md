@@ -51,6 +51,8 @@
 - Windows 操作系统
 - .NET 10.0 Runtime 或更高版本
 
+**重要提示**: 本项目需要 .NET 10 才能运行，请先确保你的本地安装了 .NET 10。如果尚未安装，请访问 [.NET 10 下载页面](https://dotnet.microsoft.com/zh-cn/download/dotnet/10.0) 进行下载和安装。
+
 ### 从源码构建
 
 ```bash
