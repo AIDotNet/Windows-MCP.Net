@@ -6,16 +6,16 @@
     {
       "registry_name": "nuget",
       "name": "WindowsMCP.Net",
-      "version": "0.1.2",
+      "version": "0.1.0",
       "package_arguments": [],
       "environment_variables": []
     }
   ],
   "repository": {
-    "url": "https://github.com/windows-mcp/windows-mcp-net",
+    "url": "https://github.com/xuzeyu91/Windows-MCP.Net",
     "source": "github"
   },
   "version_detail": {
-    "version": "0.1.2"
+    "version": "0.1.0"
   }
 }
