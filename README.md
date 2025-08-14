@@ -90,30 +90,17 @@ windows-mcp-net
 #### 使用全局安装的工具（推荐）
 ```json
 {
-  "mcpServers": {
-    "WindowsMCP.Net": {
+    "mcpServers": {
+     "WindowsMCP.Net": {
       "type": "stdio",
-      "command": "Windows-MCP.Net",
-      "args": [],
+      "command": "dnx",
+      "args": ["WindowsMCP.Net@", "--yes"],
       "env": {}
     }
-  }
+    }
 }
 ```
 
-#### 使用dotnet run
-```json
-{
-  "mcpServers": {
-    "WindowsMCP.Net": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": ["run", "--project", "path/to/Windows-MCP.Net/src/Windows-MCP.Net.csproj"],
-      "env": {}
-    }
-  }
-}
-```
 
 ## 📖 API 文档
 
