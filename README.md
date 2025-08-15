@@ -450,26 +450,6 @@ src/
 - 详细的错误信息
 - 重现步骤
 
-## 📋 更新日志
-
-### v1.2.0 (最新)
-- ✅ **新增**: UI元素识别工具，支持通过文本、类名、自动化ID查找元素
-- ✅ **优化**: 使用Windows API重构UI识别功能，提升性能和兼容性
-- ✅ **修复**: 解决了DesktopService中变量重复声明的编译错误
-- ✅ **测试**: 新增UI元素识别功能的单元测试和演示程序
-
-### v1.1.0
-- ✅ **新增**: OCR文字识别工具
-- ✅ **新增**: 文件系统操作工具
-- ✅ **优化**: 改进错误处理和日志记录
-- ✅ **文档**: 完善API文档和使用示例
-
-### v1.0.0
-- ✅ **发布**: 首个稳定版本
-- ✅ **功能**: 基础桌面自动化功能
-- ✅ **支持**: MCP协议集成
-- ✅ **工具**: 鼠标、键盘、窗口管理等核心工具
-
 ## 📞 支持
 
 如果您遇到问题或有建议，请：
@@ -478,14 +458,6 @@ src/
 2. 创建新的 Issue
 3. 参与讨论
 4. 查看 [Wiki](https://github.com/xuzeyu91/Windows-MCP.Net/wiki) 获取更多帮助
-
-### 社区
-
-- 💬 [Discussions](https://github.com/xuzeyu91/Windows-MCP.Net/discussions) - 讨论和问答
-- 📧 Email: support@windows-mcp.net
-- 🐛 [Bug Reports](https://github.com/xuzeyu91/Windows-MCP.Net/issues/new?template=bug_report.md)
-- 💡 [Feature Requests](https://github.com/xuzeyu91/Windows-MCP.Net/issues/new?template=feature_request.md)
-
 ---
 
 **注意**: 本工具需要适当的 Windows 权限来执行桌面自动化操作。请确保在受信任的环境中使用。
