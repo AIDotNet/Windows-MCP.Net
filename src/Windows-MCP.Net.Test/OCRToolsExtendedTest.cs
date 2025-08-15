@@ -25,6 +25,10 @@ namespace Windows_MCP.Net.Test
             _getTextCoordinatesLogger = NullLogger<GetTextCoordinatesTool>.Instance;
         }
 
+        /// <summary>
+        /// 测试从屏幕指定区域提取文本的基本功能
+        /// 验证ExtractTextFromRegionTool能够正确调用OCR服务并返回有效的JSON结构
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromRegionTool_ExtractTextFromRegionAsync_ShouldReturnExtractedText()
         {
@@ -53,6 +57,14 @@ namespace Windows_MCP.Net.Test
             Assert.NotNull(text); // 文本可能为空，但不应该为null
         }
 
+        /// <summary>
+        /// 测试在不同屏幕区域进行文本提取
+        /// 使用多组坐标和尺寸参数验证OCR工具的适应性
+        /// </summary>
+        /// <param name="x">区域左上角X坐标</param>
+        /// <param name="y">区域左上角Y坐标</param>
+        /// <param name="width">区域宽度</param>
+        /// <param name="height">区域高度</param>
         [Theory]
         [InlineData(0, 0, 100, 50)]
         [InlineData(500, 300, 200, 100)]
@@ -77,6 +89,10 @@ namespace Windows_MCP.Net.Test
             Assert.NotNull(text); // 文本可能为空，但不应该为null
         }
 
+        /// <summary>
+        /// 测试从小区域提取文本的能力
+        /// 验证OCR工具在处理较小屏幕区域时的表现
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromRegionTool_ExtractTextFromRegionAsync_WithSmallRegion_ShouldReturnResult()
         {
@@ -102,6 +118,10 @@ namespace Windows_MCP.Net.Test
             Assert.NotNull(text); // 文本可能为空，但不应该为null
         }
 
+        /// <summary>
+        /// 测试从大区域（全屏分辨率）提取文本的能力
+        /// 验证OCR工具在处理大屏幕区域时的性能和稳定性
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromRegionTool_ExtractTextFromRegionAsync_WithLargeRegion_ShouldReturnResult()
         {
@@ -127,6 +147,10 @@ namespace Windows_MCP.Net.Test
             Assert.NotNull(text); // 文本可能为空，但不应该为null
         }
 
+        /// <summary>
+        /// 测试处理空区域（宽度或高度为0）的边界情况
+        /// 验证OCR工具对无效区域参数的容错处理
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromRegionTool_ExtractTextFromRegionAsync_WithEmptyRegion_ShouldReturnEmptyResult()
         {
@@ -152,6 +176,10 @@ namespace Windows_MCP.Net.Test
             Assert.NotNull(text); // 文本可能为空，但不应该为null
         }
 
+        /// <summary>
+        /// 测试在屏幕上查找指定文本并获取其坐标的基本功能
+        /// 验证GetTextCoordinatesTool能够正确搜索文本并返回坐标信息
+        /// </summary>
         [Fact]
         public async Task GetTextCoordinatesTool_GetTextCoordinatesAsync_ShouldReturnCoordinates()
         {
@@ -184,6 +212,11 @@ namespace Windows_MCP.Net.Test
             }
         }
 
+        /// <summary>
+        /// 测试搜索不同类型的常见UI文本元素
+        /// 验证OCR工具对各种常见按钮和界面文本的识别能力
+        /// </summary>
+        /// <param name="text">要搜索的文本内容</param>
         [Theory]
         [InlineData("Button")]
         [InlineData("Login")]
@@ -219,6 +252,10 @@ namespace Windows_MCP.Net.Test
             }
         }
 
+        /// <summary>
+        /// 测试搜索多词组合文本的能力
+        /// 验证OCR工具能够正确识别和定位包含空格的完整短语
+        /// </summary>
         [Fact]
         public async Task GetTextCoordinatesTool_GetTextCoordinatesAsync_WithMultiWordText_ShouldReturnCoordinates()
         {
@@ -251,6 +288,10 @@ namespace Windows_MCP.Net.Test
             }
         }
 
+        /// <summary>
+        /// 测试搜索包含特殊字符的文本
+        /// 验证OCR工具对符号、标点符号等特殊字符的识别准确性
+        /// </summary>
         [Fact]
         public async Task GetTextCoordinatesTool_GetTextCoordinatesAsync_WithSpecialCharacters_ShouldReturnCoordinates()
         {
@@ -283,6 +324,10 @@ namespace Windows_MCP.Net.Test
             }
         }
 
+        /// <summary>
+        /// 测试搜索不存在的文本时的处理逻辑
+        /// 验证OCR工具在未找到目标文本时能够正确返回未找到的状态
+        /// </summary>
         [Fact]
         public async Task GetTextCoordinatesTool_GetTextCoordinatesAsync_WithTextNotFound_ShouldReturnNotFound()
         {
@@ -317,6 +362,10 @@ namespace Windows_MCP.Net.Test
             }
         }
 
+        /// <summary>
+        /// 测试搜索空字符串时的边界情况处理
+        /// 验证OCR工具对空输入参数的容错机制和错误处理
+        /// </summary>
         [Fact]
         public async Task GetTextCoordinatesTool_GetTextCoordinatesAsync_WithEmptyText_ShouldReturnErrorResult()
         {
@@ -344,6 +393,11 @@ namespace Windows_MCP.Net.Test
             }
         }
 
+        /// <summary>
+        /// 测试搜索数字和字母数字组合文本的能力
+        /// 验证OCR工具对纯数字、字母数字混合及包含符号的文本识别准确性
+        /// </summary>
+        /// <param name="text">要搜索的数字或字母数字文本</param>
         [Theory]
         [InlineData("1234567890")]
         [InlineData("ABC123")]
@@ -378,6 +432,10 @@ namespace Windows_MCP.Net.Test
             }
         }
 
+        /// <summary>
+        /// 测试处理负坐标参数的边界情况
+        /// 验证OCR工具对无效坐标输入的容错处理和异常情况的优雅处理
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromRegionTool_ExtractTextFromRegionAsync_WithNegativeCoordinates_ShouldHandleGracefully()
         {
@@ -410,6 +468,10 @@ namespace Windows_MCP.Net.Test
             }
         }
 
+        /// <summary>
+        /// 测试处理超大区域参数的极限情况
+        /// 验证OCR工具在面对超出屏幕范围的大区域时的稳定性和性能表现
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromRegionTool_ExtractTextFromRegionAsync_WithVeryLargeRegion_ShouldHandleGracefully()
         {
@@ -444,6 +506,11 @@ namespace Windows_MCP.Net.Test
 
         #region 使用真实图片文件的OCR测试
 
+        /// <summary>
+        /// 测试从真实图片文件（记事本截图）中提取文本的功能
+        /// 验证OCR服务能够正确处理PNG格式图片并提取其中的文本内容
+        /// 包含完整的异常处理和容错机制测试
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromImageAsync_WithNotepadWritingPng_ShouldExtractText()
         {
@@ -517,6 +584,10 @@ namespace Windows_MCP.Net.Test
             Assert.Contains("NotepadWriting.png", message);
         }
 
+        /// <summary>
+        /// 测试从另一个真实图片文件（网页搜索截图）中提取文本的功能
+        /// 验证OCR服务对不同类型界面截图的文本识别能力
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromImageAsync_WithOpenWebSearchPng_ShouldExtractText()
         {
@@ -554,6 +625,13 @@ namespace Windows_MCP.Net.Test
             Assert.NotNull(actualText); // 文本可能为空，但不应该为null
         }
 
+        /// <summary>
+        /// 测试在真实图片中查找特定文本坐标的功能
+        /// 注意：此测试实际是从屏幕截图中搜索，而非从图片文件中搜索
+        /// 验证文本坐标查找工具的基本功能和返回格式
+        /// </summary>
+        /// <param name="imageName">图片文件名（用于测试参数）</param>
+        /// <param name="searchText">要搜索的文本内容</param>
         [Theory]
         [InlineData("NotepadWriting.png", "Notepad")]
         [InlineData("OpenWebSearch.png", "Search")]
@@ -576,6 +654,10 @@ namespace Windows_MCP.Net.Test
             Assert.Equal(searchText, jsonResult.GetProperty("searchText").GetString());
         }
 
+        /// <summary>
+        /// 测试处理无效图片路径时的异常处理机制
+        /// 验证OCR服务在文件不存在时能够正确抛出DirectoryNotFoundException异常
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromImageAsync_WithInvalidImagePath_ShouldHandleError()
         {
@@ -590,6 +672,10 @@ namespace Windows_MCP.Net.Test
             });
         }
 
+        /// <summary>
+        /// 测试批量处理多个图片文件的能力
+        /// 验证OCR服务能够连续处理多个图片文件而不出现内存泄漏或性能问题
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromImageAsync_WithMultipleImages_ShouldProcessAll()
         {
@@ -613,6 +699,10 @@ namespace Windows_MCP.Net.Test
             }
         }
 
+        /// <summary>
+        /// 测试处理空数据流的边界情况
+        /// 验证OCR服务在接收到空MemoryStream时的容错处理和错误报告机制
+        /// </summary>
         [Fact]
         public async Task ExtractTextFromImageAsync_WithEmptyStream_ShouldHandleGracefully()
         {
