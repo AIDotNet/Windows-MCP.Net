@@ -9,8 +9,7 @@
 - [功能特性](#-功能特性)
 - [演示截图](#-演示截图)
 - [技术栈](#️-技术栈)
-- [安装](#-安装)
-- [使用方法](#-使用方法)
+
 - [API文档](#-api-文档)
 - [项目结构](#️-项目结构)
 - [功能扩展建议](#-功能扩展建议)
@@ -21,24 +20,90 @@
 
 ## 🚀 快速开始
 
-### 1. 安装 .NET 10
-确保您的系统已安装 .NET 10.0 Runtime 或更高版本。
+### 前置要求
+- Windows 操作系统
+- .NET 10.0 Runtime 或更高版本
 
-### 2. 全局安装（推荐）
+**重要提示**: 本项目需要 .NET 10 才能运行，请先确保你的本地安装了 .NET 10。如果尚未安装，请访问 [.NET 10 下载页面](https://dotnet.microsoft.com/zh-cn/download/dotnet/10.0) 进行下载和安装。
+
+### 1. 安装和运行
+
+#### 方式一：全局安装（推荐）
 ```bash
 dotnet tool install --global WindowsMCP.Net
 windows-mcp-net
 ```
 
-### 3. 从源码运行
+#### 方式二：从源码运行
 ```bash
+# 克隆仓库
 git clone https://github.com/AIDotNet/Windows-MCP.Net.git
 cd Windows-MCP.Net
+
+# 构建项目
+dotnet build
+
+# 运行项目
 dotnet run --project src/Windows-MCP.Net.csproj
 ```
 
-### 4. 配置MCP客户端
-在您的MCP客户端中添加服务器配置，即可开始使用！
+### 2. MCP 客户端配置
+
+在您的 MCP 客户端配置中添加以下配置：
+
+#### 使用全局安装的工具（推荐）
+```json
+{
+    "mcpServers": {
+     "Windows-MCP.Net": {
+      "type": "stdio",
+      "command": "dnx",
+      "args": ["Windows-MCP.Net@", "--yes"],
+      "env": {}
+    }
+    }
+}
+```
+
+#### 使用项目源码直接运行（开发模式）
+
+**方式一：工作区配置**
+
+在项目根目录创建 `.vscode/mcp.json` 文件：
+```json
+{
+  "mcpServers": {
+    "Windows-MCP.Net-Dev": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
+      "cwd": "${workspaceFolder}",
+      "env": {}
+    }
+  }
+}
+```
+
+**方式二：用户配置**
+
+通过VS Code命令面板运行 `MCP: Open User Configuration`，添加：
+```json
+{
+  "mcpServers": {
+    "Windows-MCP.Net-Local": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
+      "env": {}
+    }
+  }
+}
+```
+
+> **注意**: 使用项目源码方式便于开发调试，修改代码后无需重新安装即可生效。VS Code 1.102+ 版本支持MCP服务器的自动发现和管理。
+
+### 3. 开始使用
+配置完成后，重启您的MCP客户端，即可开始使用Windows桌面自动化功能！
 
 ## 🚀 功能特性
 
@@ -143,100 +208,7 @@ dotnet run --project src/Windows-MCP.Net.csproj
 - **HtmlAgilityPack**: HTML 解析和网页抓取
 - **ReverseMarkdown**: HTML 到 Markdown 转换
 
-## 📦 安装
 
-### 前置要求
-- Windows 操作系统
-- .NET 10.0 Runtime 或更高版本
-
-**重要提示**: 本项目需要 .NET 10 才能运行，请先确保你的本地安装了 .NET 10。如果尚未安装，请访问 [.NET 10 下载页面](https://dotnet.microsoft.com/zh-cn/download/dotnet/10.0) 进行下载和安装。
-
-### 从源码构建
-
-```bash
-# 克隆仓库
-git clone https://github.com/AIDotNet/Windows-MCP.Net.git
-cd Windows-MCP.Net/src
-
-# 构建项目
-dotnet build
-
-# 运行项目
-dotnet run
-```
-
-### NuGet 包安装
-
-```bash
-dotnet tool install --global WindowsMCP.Net
-```
-
-## 🚀 使用方法
-
-### 作为 MCP 服务器运行
-
-```bash
-# 直接运行
-dotnet run --project src/Windows-MCP.Net.csproj
-
-# 或者使用已安装的工具
-windows-mcp-net
-```
-
-### MCP 客户端配置
-
-在您的 MCP 客户端配置中添加以下配置：
-
-#### 使用全局安装的工具（推荐）
-```json
-{
-    "mcpServers": {
-     "Windows-MCP.Net": {
-      "type": "stdio",
-      "command": "dnx",
-      "args": ["Windows-MCP.Net@", "--yes"],
-      "env": {}
-    }
-    }
-}
-```
-
-#### 使用项目源码直接运行（开发模式）
-
-**方式一：工作区配置**
-
-在项目根目录创建 `.vscode/mcp.json` 文件：
-```json
-{
-  "mcpServers": {
-    "Windows-MCP.Net-Dev": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
-      "cwd": "${workspaceFolder}",
-      "env": {}
-    }
-  }
-}
-```
-
-**方式二：用户配置**
-
-通过VS Code命令面板运行 `MCP: Open User Configuration`，添加：
-```json
-{
-  "mcpServers": {
-    "Windows-MCP.Net-Local": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
-      "env": {}
-    }
-  }
-}
-```
-
-> **注意**: 使用项目源码方式便于开发调试，修改代码后无需重新安装即可生效。VS Code 1.102+ 版本支持MCP服务器的自动发现和管理。
 
 
 ## 📖 API 文档
