@@ -266,13 +266,19 @@ public class DesktopService : IDesktopService
                 FileName = "cmd.exe",
                 Arguments = $"/c start {name}",
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
             };
 
             using var process = Process.Start(startInfo);
             if (process != null)
             {
                 await process.WaitForExitAsync();
+                
+                // 读取错误输出以检查是否有错误
+                var errorOutput = await process.StandardError.ReadToEndAsync();
+                
                 if (process.ExitCode == 0)
                 {
                     // 等待应用启动完成
@@ -287,8 +293,14 @@ public class DesktopService : IDesktopService
                     
                     return ($"Successfully launched {name}", 0);
                 }
+                else
+                {
+                    // 如果有错误输出，返回具体的错误信息
+                    var errorMessage = !string.IsNullOrEmpty(errorOutput) ? errorOutput.Trim() : "Unknown error";
+                    return ($"Failed to launch {name}: {errorMessage}", 1);
+                }
             }
-            return ($"Failed to launch {name}", 1);
+            return ($"Failed to launch {name}: Process could not be started", 1);
         }
         catch (Exception ex)
         {
