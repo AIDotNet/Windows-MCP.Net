@@ -131,10 +131,35 @@ public class DesktopService : IDesktopService
     [DllImport("user32.dll")]
     private static extern int GetSystemMetrics(int nIndex);
 
+    // DPI awareness API imports
+    [DllImport("gdi32.dll")]
+    private static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetProcessDPIAware();
+
+    [DllImport("shcore.dll")]
+    private static extern int SetProcessDpiAwareness(int value);
+
     // Constants for screenshot
     private const uint SRCCOPY = 0x00CC0020;
     private const int SM_CXSCREEN = 0;
     private const int SM_CYSCREEN = 1;
+    private const int SM_CXVIRTUALSCREEN = 78;
+    private const int SM_CYVIRTUALSCREEN = 79;
+    private const int SM_XVIRTUALSCREEN = 76;
+    private const int SM_YVIRTUALSCREEN = 77;
+    
+    // Constants for GetDeviceCaps
+    private const int LOGPIXELSX = 88;
+    private const int LOGPIXELSY = 90;
+    private const int DESKTOPHORZRES = 118;
+    private const int DESKTOPVERTRES = 117;
+    
+    // DPI awareness constants
+    private const int PROCESS_DPI_UNAWARE = 0;
+    private const int PROCESS_SYSTEM_DPI_AWARE = 1;
+    private const int PROCESS_PER_MONITOR_DPI_AWARE = 2;
 
     // Constants for clipboard
     private const uint CF_TEXT = 1;
@@ -250,6 +275,47 @@ public class DesktopService : IDesktopService
     {
         _logger = logger;
         _httpClient = new HttpClient();
+        
+        // 尝试设置DPI感知以正确处理高DPI屏幕
+        InitializeDpiAwareness();
+    }
+    
+    /// <summary>
+    /// 初始化DPI感知设置
+    /// </summary>
+    private void InitializeDpiAwareness()
+    {
+        try
+        {
+            // 尝试设置Per-Monitor DPI感知（Windows 8.1+）
+            var result = SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+            if (result == 0)
+            {
+                _logger.LogInformation("Successfully set Per-Monitor DPI awareness");
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set Per-Monitor DPI awareness, trying fallback");
+        }
+        
+        try
+        {
+            // 回退到系统DPI感知（Windows Vista+）
+            if (SetProcessDPIAware())
+            {
+                _logger.LogInformation("Successfully set System DPI awareness");
+            }
+            else
+            {
+                _logger.LogWarning("Failed to set System DPI awareness");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set any DPI awareness");
+        }
     }
 
     /// <summary>
@@ -1157,13 +1223,25 @@ public class DesktopService : IDesktopService
     {
         try
         {
-            // 获取屏幕尺寸
-            int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-            int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-
             // 获取桌面窗口句柄和设备上下文
             IntPtr desktopWindow = GetDesktopWindow();
             IntPtr desktopDC = GetDC(desktopWindow);
+
+            // 获取真实的物理屏幕尺寸（考虑DPI缩放）
+            int screenWidth = GetDeviceCaps(desktopDC, DESKTOPHORZRES);
+            int screenHeight = GetDeviceCaps(desktopDC, DESKTOPVERTRES);
+            
+            // 如果GetDeviceCaps返回0，则回退到GetSystemMetrics
+            if (screenWidth == 0 || screenHeight == 0)
+            {
+                screenWidth = GetSystemMetrics(SM_CXSCREEN);
+                screenHeight = GetSystemMetrics(SM_CYSCREEN);
+                _logger.LogWarning("Using fallback screen dimensions: {Width}x{Height}", screenWidth, screenHeight);
+            }
+            else
+            {
+                _logger.LogInformation("Using DPI-aware screen dimensions: {Width}x{Height}", screenWidth, screenHeight);
+            }
 
             // 创建兼容的设备上下文和位图
             IntPtr memoryDC = CreateCompatibleDC(desktopDC);
@@ -1192,7 +1270,7 @@ public class DesktopService : IDesktopService
             DeleteDC(memoryDC);
             ReleaseDC(desktopWindow, desktopDC);
 
-            _logger.LogInformation("Screenshot saved to: {FilePath}", filePath);
+            _logger.LogInformation("Screenshot saved to: {FilePath} with dimensions {Width}x{Height}", filePath, screenWidth, screenHeight);
             return filePath;
         }
         catch (Exception ex)
