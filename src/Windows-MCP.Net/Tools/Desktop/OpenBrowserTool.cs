@@ -23,14 +23,16 @@ public class OpenBrowserTool
     /// <summary>
     /// Open a URL in the default browser.
     /// </summary>
-    /// <param name="url">The URL to open. If not provided or invalid, opens the default GitHub repository</param>
+    /// <param name="url">The URL to open. If not provided or invalid, opens Baidu</param>
+    /// <param name="searchQuery">Optional search query to append to Baidu URL</param>
     /// <returns>Result message indicating success or failure</returns>
     [McpServerTool, Description("Open a URL in the default browser")]
     public async Task<string> OpenBrowserAsync(
-        [Description("The URL to open (optional, defaults to GitHub repository if not provided)")] string? url = null)
+        [Description("The URL to open (optional, defaults to Baidu if not provided)")] string? url = null,
+        [Description("Optional search query to append to Baidu URL")] string? searchQuery = null)
     {
-        _logger.LogInformation("Opening browser with URL: {Url}", url ?? "default");
+        _logger.LogInformation("Opening browser with URL: {Url}, SearchQuery: {SearchQuery}", url ?? "default", searchQuery ?? "none");
         
-        return await _desktopService.OpenBrowserAsync(url);
+        return await _desktopService.OpenBrowserAsync(url, searchQuery);
     }
 }

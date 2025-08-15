@@ -155,9 +155,10 @@ public interface IDesktopService
     /// <summary>
     /// Open a URL in the default browser.
     /// </summary>
-    /// <param name="url">The URL to open. If null or invalid, opens the default GitHub repository</param>
+    /// <param name="url">The URL to open. If null or invalid, opens Baidu</param>
+    /// <param name="searchQuery">Optional search query to append to Baidu URL</param>
     /// <returns>The result message</returns>
-    Task<string> OpenBrowserAsync(string? url = null);
+    Task<string> OpenBrowserAsync(string? url = null, string? searchQuery = null);
 
     /// <summary>
     /// Find UI element by text content.

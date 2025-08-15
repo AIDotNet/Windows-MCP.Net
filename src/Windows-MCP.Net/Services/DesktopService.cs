@@ -1333,16 +1333,24 @@ public class DesktopService : IDesktopService
     /// <summary>
     /// 在默认浏览器中打开指定的URL
     /// </summary>
-    /// <param name="url">要打开的URL，如果为空或无效则打开默认的GitHub仓库</param>
+    /// <param name="url">要打开的URL，如果为空或无效则打开百度</param>
+    /// <param name="searchQuery">可选的搜索词，会拼接到百度URL后面</param>
     /// <returns>操作结果消息</returns>
-    public async Task<string> OpenBrowserAsync(string? url = null)
+    public async Task<string> OpenBrowserAsync(string? url = null, string? searchQuery = null)
     {
         try
         {
-            // 如果URL为空或无效，使用默认的GitHub仓库URL
+            // 如果URL为空或无效，使用默认的百度URL
             if (string.IsNullOrWhiteSpace(url) || !IsValidHttpUrl(url))
             {
-                url = "https://github.com/AIDotNet/Windows-MCP.Net";
+                url = "https://www.baidu.com";
+                
+                // 如果有搜索词，拼接到百度URL后面
+                if (!string.IsNullOrWhiteSpace(searchQuery))
+                {
+                    var encodedQuery = Uri.EscapeDataString(searchQuery);
+                    url = $"https://www.baidu.com/s?wd={encodedQuery}";
+                }
             }
 
             _logger.LogInformation("Opening URL in browser: {Url}", url);
