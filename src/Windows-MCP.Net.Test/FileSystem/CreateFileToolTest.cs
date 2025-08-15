@@ -68,10 +68,11 @@ namespace Windows_MCP.Net.Test.FileSystem
         public async Task CreateFileAsync_WithDifferentContent_ShouldCallService(string fileName, string content)
         {
             // Arrange
-            var filePath = Path.Combine("C:\\temp", fileName);
+            var tempDir = Path.GetTempPath();
+            var filePath = Path.Combine(tempDir, fileName);
             
             // 确保测试目录存在
-            Directory.CreateDirectory("C:\\temp");
+            Directory.CreateDirectory(tempDir);
             
             // 确保文件不存在
             if (File.Exists(filePath))
@@ -161,12 +162,13 @@ namespace Windows_MCP.Net.Test.FileSystem
         public async Task CreateFileAsync_WithExistingFile_ShouldOverwrite()
         {
             // Arrange
-            var filePath = "C:\\temp\\existing.txt";
+            var tempDir = Path.GetTempPath();
+            var filePath = Path.Combine(tempDir, "existing.txt");
             var originalContent = "Original content";
             var newContent = "New content";
             
             // 确保测试目录存在
-            Directory.CreateDirectory("C:\\temp");
+            Directory.CreateDirectory(tempDir);
             
             // 创建原文件
             File.WriteAllText(filePath, originalContent);
