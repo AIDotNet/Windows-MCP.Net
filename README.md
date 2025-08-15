@@ -31,7 +31,6 @@
 #### 方式一：全局安装（推荐）
 ```bash
 dotnet tool install --global WindowsMCP.Net
-windows-mcp-net
 ```
 
 #### 方式二：从源码运行
