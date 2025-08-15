@@ -40,7 +40,10 @@ namespace Windows_MCP.Net.Test
             var result = await extractTextFromRegionTool.ExtractTextFromRegionAsync(x, y, width, height);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("text").GetString());
+            Assert.Equal("Text extracted successfully", jsonResult.GetProperty("message").GetString());
             _mockOcrService.Verify(s => s.ExtractTextFromRegionAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -60,7 +63,9 @@ namespace Windows_MCP.Net.Test
             var result = await extractTextFromRegionTool.ExtractTextFromRegionAsync(x, y, width, height);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("text").GetString());
             _mockOcrService.Verify(s => s.ExtractTextFromRegionAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -81,7 +86,9 @@ namespace Windows_MCP.Net.Test
             var result = await extractTextFromRegionTool.ExtractTextFromRegionAsync(x, y, width, height);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("text").GetString());
             _mockOcrService.Verify(s => s.ExtractTextFromRegionAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -102,7 +109,9 @@ namespace Windows_MCP.Net.Test
             var result = await extractTextFromRegionTool.ExtractTextFromRegionAsync(x, y, width, height);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("text").GetString());
             _mockOcrService.Verify(s => s.ExtractTextFromRegionAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -123,7 +132,9 @@ namespace Windows_MCP.Net.Test
             var result = await extractTextFromRegionTool.ExtractTextFromRegionAsync(x, y, width, height);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("text").GetString());
             _mockOcrService.Verify(s => s.ExtractTextFromRegionAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -132,7 +143,6 @@ namespace Windows_MCP.Net.Test
         {
             // Arrange
             var text = "Search Text";
-            var expectedResult = "{\"x\": 150, \"y\": 250, \"width\": 100, \"height\": 20}";
             var expectedPoint = new Point(200, 300);
             _mockOcrService.Setup(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                           .ReturnsAsync((expectedPoint, 0));
@@ -142,7 +152,12 @@ namespace Windows_MCP.Net.Test
             var result = await getTextCoordinatesTool.GetTextCoordinatesAsync(text);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.True(jsonResult.GetProperty("found").GetBoolean());
+            Assert.Equal(text, jsonResult.GetProperty("searchText").GetString());
+            Assert.Equal(200, jsonResult.GetProperty("coordinates").GetProperty("x").GetInt32());
+            Assert.Equal(300, jsonResult.GetProperty("coordinates").GetProperty("y").GetInt32());
             _mockOcrService.Verify(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -154,7 +169,6 @@ namespace Windows_MCP.Net.Test
         public async Task GetTextCoordinatesTool_GetTextCoordinatesAsync_WithDifferentTexts_ShouldCallService(string text)
         {
             // Arrange
-            var expectedResult = $"{{\"text\": \"{text}\", \"x\": 100, \"y\": 200}}";
             var expectedPoint = new Point(200, 300);
             _mockOcrService.Setup(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                           .ReturnsAsync((expectedPoint, 0));
@@ -164,7 +178,12 @@ namespace Windows_MCP.Net.Test
             var result = await getTextCoordinatesTool.GetTextCoordinatesAsync(text);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.True(jsonResult.GetProperty("found").GetBoolean());
+            Assert.Equal(text, jsonResult.GetProperty("searchText").GetString());
+            Assert.Equal(200, jsonResult.GetProperty("coordinates").GetProperty("x").GetInt32());
+            Assert.Equal(300, jsonResult.GetProperty("coordinates").GetProperty("y").GetInt32());
             _mockOcrService.Verify(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -173,7 +192,6 @@ namespace Windows_MCP.Net.Test
         {
             // Arrange
             var text = "Click here to continue";
-            var expectedResult = "{\"x\": 300, \"y\": 400, \"width\": 150, \"height\": 25, \"found\": true}";
             var expectedPoint = new Point(200, 300);
             _mockOcrService.Setup(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                           .ReturnsAsync((expectedPoint, 0));
@@ -183,7 +201,12 @@ namespace Windows_MCP.Net.Test
             var result = await getTextCoordinatesTool.GetTextCoordinatesAsync(text);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.True(jsonResult.GetProperty("found").GetBoolean());
+            Assert.Equal(text, jsonResult.GetProperty("searchText").GetString());
+            Assert.Equal(200, jsonResult.GetProperty("coordinates").GetProperty("x").GetInt32());
+            Assert.Equal(300, jsonResult.GetProperty("coordinates").GetProperty("y").GetInt32());
             _mockOcrService.Verify(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -192,7 +215,6 @@ namespace Windows_MCP.Net.Test
         {
             // Arrange
             var text = "Save & Exit";
-            var expectedResult = "{\"x\": 500, \"y\": 600, \"width\": 80, \"height\": 30}";
             var expectedPoint = new Point(200, 300);
             _mockOcrService.Setup(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                           .ReturnsAsync((expectedPoint, 0));
@@ -202,26 +224,33 @@ namespace Windows_MCP.Net.Test
             var result = await getTextCoordinatesTool.GetTextCoordinatesAsync(text);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.True(jsonResult.GetProperty("found").GetBoolean());
+            Assert.Equal(text, jsonResult.GetProperty("searchText").GetString());
+            Assert.Equal(200, jsonResult.GetProperty("coordinates").GetProperty("x").GetInt32());
+            Assert.Equal(300, jsonResult.GetProperty("coordinates").GetProperty("y").GetInt32());
             _mockOcrService.Verify(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
-        public async Task GetTextCoordinatesTool_GetTextCoordinatesAsync_WithTextNotFound_ShouldReturnNotFoundResult()
+        public async Task GetTextCoordinatesTool_GetTextCoordinatesAsync_WithTextNotFound_ShouldReturnNotFound()
         {
             // Arrange
             var text = "NonExistentText";
-            var expectedResult = "{\"found\": false, \"message\": \"Text not found on screen\"}";
-            var expectedPoint = new Point(200, 300);
             _mockOcrService.Setup(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                          .ReturnsAsync((expectedPoint, 0));
+                          .ReturnsAsync(((Point?)null, 0));
             var getTextCoordinatesTool = new GetTextCoordinatesTool(_mockOcrService.Object, _mockGetTextCoordinatesLogger.Object);
 
             // Act
             var result = await getTextCoordinatesTool.GetTextCoordinatesAsync(text);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.False(jsonResult.GetProperty("found").GetBoolean());
+            Assert.Equal(text, jsonResult.GetProperty("searchText").GetString());
+            Assert.Contains("not found", jsonResult.GetProperty("message").GetString());
             _mockOcrService.Verify(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -230,17 +259,18 @@ namespace Windows_MCP.Net.Test
         {
             // Arrange
             var text = "";
-            var expectedResult = "{\"error\": \"Text parameter cannot be empty\"}";
-            var expectedPoint = new Point(200, 300);
             _mockOcrService.Setup(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                          .ReturnsAsync((expectedPoint, 0));
+                          .ReturnsAsync(((Point?)null, -1));
             var getTextCoordinatesTool = new GetTextCoordinatesTool(_mockOcrService.Object, _mockGetTextCoordinatesLogger.Object);
 
             // Act
             var result = await getTextCoordinatesTool.GetTextCoordinatesAsync(text);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.False(jsonResult.GetProperty("success").GetBoolean());
+            Assert.False(jsonResult.GetProperty("found").GetBoolean());
+            Assert.Equal(text, jsonResult.GetProperty("searchText").GetString());
             _mockOcrService.Verify(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -251,7 +281,6 @@ namespace Windows_MCP.Net.Test
         public async Task GetTextCoordinatesTool_GetTextCoordinatesAsync_WithNumericAndAlphanumericText_ShouldCallService(string text)
         {
             // Arrange
-            var expectedResult = $"{{\"text\": \"{text}\", \"x\": 200, \"y\": 300, \"confidence\": 0.95}}";
             var expectedPoint = new Point(200, 300);
             _mockOcrService.Setup(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                           .ReturnsAsync((expectedPoint, 0));
@@ -261,7 +290,12 @@ namespace Windows_MCP.Net.Test
             var result = await getTextCoordinatesTool.GetTextCoordinatesAsync(text);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.True(jsonResult.GetProperty("found").GetBoolean());
+            Assert.Equal(text, jsonResult.GetProperty("searchText").GetString());
+            Assert.Equal(200, jsonResult.GetProperty("coordinates").GetProperty("x").GetInt32());
+            Assert.Equal(300, jsonResult.GetProperty("coordinates").GetProperty("y").GetInt32());
             _mockOcrService.Verify(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -282,7 +316,9 @@ namespace Windows_MCP.Net.Test
             var result = await extractTextFromRegionTool.ExtractTextFromRegionAsync(x, y, width, height);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("text").GetString());
             _mockOcrService.Verify(s => s.ExtractTextFromRegionAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -303,7 +339,9 @@ namespace Windows_MCP.Net.Test
             var result = await extractTextFromRegionTool.ExtractTextFromRegionAsync(x, y, width, height);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("text").GetString());
             _mockOcrService.Verify(s => s.ExtractTextFromRegionAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
     }

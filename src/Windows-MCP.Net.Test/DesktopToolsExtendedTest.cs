@@ -445,7 +445,7 @@ namespace Windows_MCP.Net.Test
             var result = await powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            Assert.Equal($"Status Code: 0\nResponse: {expectedResult}", result);
             _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
         }
 
@@ -465,7 +465,8 @@ namespace Windows_MCP.Net.Test
             var result = await powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var expectedOutput = $"Status Code: 0\nResponse: {expectedResult}";
+            Assert.Equal(expectedOutput, result);
             _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
         }
 

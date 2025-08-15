@@ -51,7 +51,12 @@ namespace Windows_MCP.Net.Test
             var result = await copyFileTool.CopyFileAsync(source, destination);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(source, jsonResult.GetProperty("source").GetString());
+            Assert.Equal(destination, jsonResult.GetProperty("destination").GetString());
+            Assert.False(jsonResult.GetProperty("overwrite").GetBoolean());
             _mockFileSystemService.Verify(x => x.CopyFileAsync(source, destination, false), Times.Once);
         }
 
@@ -72,7 +77,12 @@ namespace Windows_MCP.Net.Test
             var result = await copyFileTool.CopyFileAsync(source, destination, overwrite);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(source, jsonResult.GetProperty("source").GetString());
+            Assert.Equal(destination, jsonResult.GetProperty("destination").GetString());
+            Assert.Equal(overwrite, jsonResult.GetProperty("overwrite").GetBoolean());
             _mockFileSystemService.Verify(x => x.CopyFileAsync(source, destination, overwrite), Times.Once);
         }
 
@@ -91,7 +101,11 @@ namespace Windows_MCP.Net.Test
             var result = await moveFileTool.MoveFileAsync(source, destination);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(source, jsonResult.GetProperty("source").GetString());
+            Assert.Equal(destination, jsonResult.GetProperty("destination").GetString());
             _mockFileSystemService.Verify(x => x.MoveFileAsync(source, destination, false), Times.Once);
         }
 
@@ -110,7 +124,11 @@ namespace Windows_MCP.Net.Test
             var result = await moveFileTool.MoveFileAsync(source, destination);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(source, jsonResult.GetProperty("source").GetString());
+            Assert.Equal(destination, jsonResult.GetProperty("destination").GetString());
             _mockFileSystemService.Verify(x => x.MoveFileAsync(source, destination, false), Times.Once);
         }
 
@@ -128,7 +146,10 @@ namespace Windows_MCP.Net.Test
             var result = await deleteFileTool.DeleteFileAsync(filePath);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(filePath, jsonResult.GetProperty("path").GetString());
             _mockFileSystemService.Verify(x => x.DeleteFileAsync(filePath), Times.Once);
         }
 
@@ -148,7 +169,10 @@ namespace Windows_MCP.Net.Test
             var result = await deleteFileTool.DeleteFileAsync(filePath);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(filePath, jsonResult.GetProperty("path").GetString());
             _mockFileSystemService.Verify(x => x.DeleteFileAsync(filePath), Times.Once);
         }
 
@@ -167,7 +191,11 @@ namespace Windows_MCP.Net.Test
             var result = await createFileTool.CreateFileAsync(filePath, content);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(filePath, jsonResult.GetProperty("path").GetString());
+            Assert.Equal(content.Length, jsonResult.GetProperty("contentLength").GetInt32());
             _mockFileSystemService.Verify(x => x.CreateFileAsync(filePath, content), Times.Once);
         }
 
@@ -187,7 +215,11 @@ namespace Windows_MCP.Net.Test
             var result = await createFileTool.CreateFileAsync(filePath, content);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(filePath, jsonResult.GetProperty("path").GetString());
+            Assert.Equal(content.Length, jsonResult.GetProperty("contentLength").GetInt32());
             _mockFileSystemService.Verify(x => x.CreateFileAsync(filePath, content), Times.Once);
         }
 
@@ -205,7 +237,11 @@ namespace Windows_MCP.Net.Test
             var result = await createDirectoryTool.CreateDirectoryAsync(directoryPath);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(directoryPath, jsonResult.GetProperty("path").GetString());
+            Assert.True(jsonResult.GetProperty("createParents").GetBoolean());
             _mockFileSystemService.Verify(x => x.CreateDirectoryAsync(directoryPath, true), Times.Once);
         }
 
@@ -225,7 +261,11 @@ namespace Windows_MCP.Net.Test
             var result = await createDirectoryTool.CreateDirectoryAsync(directoryPath, createParents);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(directoryPath, jsonResult.GetProperty("path").GetString());
+            Assert.Equal(createParents, jsonResult.GetProperty("createParents").GetBoolean());
             _mockFileSystemService.Verify(x => x.CreateDirectoryAsync(directoryPath, createParents), Times.Once);
         }
 
@@ -234,17 +274,22 @@ namespace Windows_MCP.Net.Test
         {
             // Arrange
             var directoryPath = "C:\\TempFolder";
+            var recursive = false;
             var expectedResult = "Directory deleted successfully";
-            _mockFileSystemService.Setup(x => x.DeleteDirectoryAsync(directoryPath, false))
+            _mockFileSystemService.Setup(x => x.DeleteDirectoryAsync(directoryPath, recursive))
                                   .ReturnsAsync((expectedResult, 0));
             var deleteDirectoryTool = new DeleteDirectoryTool(_mockFileSystemService.Object, _mockDeleteDirectoryLogger.Object);
 
             // Act
-            var result = await deleteDirectoryTool.DeleteDirectoryAsync(directoryPath);
+            var result = await deleteDirectoryTool.DeleteDirectoryAsync(directoryPath, recursive);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockFileSystemService.Verify(x => x.DeleteDirectoryAsync(directoryPath, false), Times.Once);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(directoryPath, jsonResult.GetProperty("path").GetString());
+            Assert.False(jsonResult.GetProperty("recursive").GetBoolean());
+            _mockFileSystemService.Verify(x => x.DeleteDirectoryAsync(directoryPath, recursive), Times.Once);
         }
 
         [Theory]
@@ -263,7 +308,11 @@ namespace Windows_MCP.Net.Test
             var result = await deleteDirectoryTool.DeleteDirectoryAsync(directoryPath, recursive);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("message").GetString());
+            Assert.Equal(directoryPath, jsonResult.GetProperty("path").GetString());
+            Assert.Equal(recursive, jsonResult.GetProperty("recursive").GetBoolean());
             _mockFileSystemService.Verify(x => x.DeleteDirectoryAsync(directoryPath, recursive), Times.Once);
         }
 
@@ -281,7 +330,13 @@ namespace Windows_MCP.Net.Test
             var result = await listDirectoryTool.ListDirectoryAsync(directoryPath);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("listing").GetString());
+            Assert.Equal(directoryPath, jsonResult.GetProperty("path").GetString());
+            Assert.True(jsonResult.GetProperty("includeFiles").GetBoolean());
+            Assert.True(jsonResult.GetProperty("includeDirectories").GetBoolean());
+            Assert.False(jsonResult.GetProperty("recursive").GetBoolean());
             _mockFileSystemService.Verify(x => x.ListDirectoryAsync(directoryPath, true, true, false), Times.Once);
         }
 
@@ -302,7 +357,13 @@ namespace Windows_MCP.Net.Test
             var result = await listDirectoryTool.ListDirectoryAsync(directoryPath, includeFiles, includeDirectories, recursive);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("listing").GetString());
+            Assert.Equal(directoryPath, jsonResult.GetProperty("path").GetString());
+            Assert.Equal(includeFiles, jsonResult.GetProperty("includeFiles").GetBoolean());
+            Assert.Equal(includeDirectories, jsonResult.GetProperty("includeDirectories").GetBoolean());
+            Assert.Equal(recursive, jsonResult.GetProperty("recursive").GetBoolean());
             _mockFileSystemService.Verify(x => x.ListDirectoryAsync(directoryPath, includeFiles, includeDirectories, recursive), Times.Once);
         }
 
@@ -314,13 +375,19 @@ namespace Windows_MCP.Net.Test
             var expectedResult = "{\"name\": \"test.txt\", \"size\": 1024, \"created\": \"2024-01-01\"}";
             _mockFileSystemService.Setup(x => x.GetFileInfoAsync(filePath))
                                   .ReturnsAsync((expectedResult, 0));
+            _mockFileSystemService.Setup(x => x.FileExists(filePath)).Returns(true);
+            _mockFileSystemService.Setup(x => x.DirectoryExists(filePath)).Returns(false);
             var getFileInfoTool = new GetFileInfoTool(_mockFileSystemService.Object, _mockGetFileInfoLogger.Object);
 
             // Act
             var result = await getFileInfoTool.GetFileInfoAsync(filePath);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("info").GetString());
+            Assert.Equal(filePath, jsonResult.GetProperty("path").GetString());
+            Assert.True(jsonResult.GetProperty("fileExists").GetBoolean());
             _mockFileSystemService.Verify(x => x.GetFileInfoAsync(filePath), Times.Once);
         }
 
@@ -334,13 +401,19 @@ namespace Windows_MCP.Net.Test
             var expectedResult = $"Info for {filePath}";
             _mockFileSystemService.Setup(x => x.GetFileInfoAsync(filePath))
                                   .ReturnsAsync((expectedResult, 0));
+            _mockFileSystemService.Setup(x => x.FileExists(filePath)).Returns(true);
+            _mockFileSystemService.Setup(x => x.DirectoryExists(filePath)).Returns(false);
             var getFileInfoTool = new GetFileInfoTool(_mockFileSystemService.Object, _mockGetFileInfoLogger.Object);
 
             // Act
             var result = await getFileInfoTool.GetFileInfoAsync(filePath);
 
             // Assert
-            Assert.Equal(expectedResult, result);
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedResult, jsonResult.GetProperty("info").GetString());
+            Assert.Equal(filePath, jsonResult.GetProperty("path").GetString());
+            Assert.True(jsonResult.GetProperty("fileExists").GetBoolean());
             _mockFileSystemService.Verify(x => x.GetFileInfoAsync(filePath), Times.Once);
         }
 
