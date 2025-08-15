@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using HtmlAgilityPack;
@@ -58,6 +59,28 @@ public class DesktopService : IDesktopService
 
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsWindowEnabled(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr WindowFromPoint(POINT Point);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr ChildWindowFromPoint(IntPtr hWndParent, POINT Point);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string? lpszClass, string? lpszWindow);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINT
+    {
+        public int X;
+        public int Y;
+    }
 
     // Clipboard API imports
     [DllImport("user32.dll")]
@@ -280,6 +303,32 @@ public class DesktopService : IDesktopService
         InitializeDpiAwareness();
     }
     
+    /// <summary>
+    /// 获取窗口文本的辅助方法
+    /// </summary>
+    /// <param name="hWnd">窗口句柄</param>
+    /// <returns>窗口文本</returns>
+    private string GetWindowText(IntPtr hWnd)
+    {
+        const int maxLength = 256;
+        var text = new StringBuilder(maxLength);
+        GetWindowText(hWnd, text, maxLength);
+        return text.ToString();
+    }
+
+    /// <summary>
+    /// 获取窗口类名的辅助方法
+    /// </summary>
+    /// <param name="hWnd">窗口句柄</param>
+    /// <returns>窗口类名</returns>
+    private string GetClassName(IntPtr hWnd)
+    {
+        const int maxLength = 256;
+        var className = new StringBuilder(maxLength);
+        GetClassName(hWnd, className, maxLength);
+        return className.ToString();
+    }
+
     /// <summary>
     /// 初始化DPI感知设置
     /// </summary>
@@ -1326,6 +1375,402 @@ public class DesktopService : IDesktopService
     {
         return Uri.TryCreate(url, UriKind.Absolute, out var uriResult) &&
                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
+
+    /// <summary>
+    /// Find UI element by text content.
+    /// </summary>
+    /// <param name="text">The text to search for</param>
+    /// <returns>A JSON string containing element information or error message</returns>
+    public async Task<string> FindElementByTextAsync(string text)
+    {
+        try
+        {
+            _logger.LogInformation("Searching for UI element with text: {Text}", text);
+            
+            var foundWindow = IntPtr.Zero;
+            EnumWindows((hWnd, lParam) =>
+            {
+                var windowText = GetWindowText(hWnd);
+                if (!string.IsNullOrEmpty(windowText) && windowText.Contains(text, StringComparison.OrdinalIgnoreCase))
+                {
+                    foundWindow = hWnd;
+                    return false; // Stop enumeration
+                }
+                return true; // Continue enumeration
+            }, IntPtr.Zero);
+            
+            if (foundWindow != IntPtr.Zero)
+            {
+                GetWindowRect(foundWindow, out var rect);
+                var windowText = GetWindowText(foundWindow);
+                var className = GetClassName(foundWindow);
+                
+                var result = new
+                {
+                    success = true,
+                    found = true,
+                    element = new
+                    {
+                        name = windowText,
+                        automationId = foundWindow.ToString(),
+                        className = className,
+                        controlType = "Window",
+                        boundingRectangle = new
+                        {
+                            x = rect.Left,
+                            y = rect.Top,
+                            width = rect.Right - rect.Left,
+                            height = rect.Bottom - rect.Top
+                        },
+                        isEnabled = IsWindowEnabled(foundWindow),
+                        isVisible = IsWindowVisible(foundWindow)
+                    }
+                };
+                return JsonSerializer.Serialize(result);
+            }
+            else
+            {
+                var result = new
+                {
+                    success = true,
+                    found = false,
+                    message = $"Element with text '{text}' not found"
+                };
+                return JsonSerializer.Serialize(result);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding element by text: {Text}", text);
+            var result = new
+            {
+                success = false,
+                error = ex.Message
+            };
+            return JsonSerializer.Serialize(result);
+        }
+    }
+
+    /// <summary>
+    /// Find UI element by class name.
+    /// </summary>
+    /// <param name="className">The class name to search for</param>
+    /// <returns>A JSON string containing element information or error message</returns>
+    public async Task<string> FindElementByClassNameAsync(string className)
+    {
+        try
+        {
+            _logger.LogInformation("Searching for UI element with class name: {ClassName}", className);
+            
+            var foundWindow = IntPtr.Zero;
+            EnumWindows((hWnd, lParam) =>
+            {
+                var windowClassName = GetClassName(hWnd);
+                if (!string.IsNullOrEmpty(windowClassName) && windowClassName.Equals(className, StringComparison.OrdinalIgnoreCase))
+                {
+                    foundWindow = hWnd;
+                    return false; // Stop enumeration
+                }
+                return true; // Continue enumeration
+            }, IntPtr.Zero);
+            
+            if (foundWindow != IntPtr.Zero)
+            {
+                GetWindowRect(foundWindow, out var rect);
+                var windowText = GetWindowText(foundWindow);
+                var windowClassName = GetClassName(foundWindow);
+                
+                var result = new
+                {
+                    success = true,
+                    found = true,
+                    element = new
+                    {
+                        name = windowText,
+                        automationId = foundWindow.ToString(),
+                        className = windowClassName,
+                        controlType = "Window",
+                        boundingRectangle = new
+                        {
+                            x = rect.Left,
+                            y = rect.Top,
+                            width = rect.Right - rect.Left,
+                            height = rect.Bottom - rect.Top
+                        },
+                        isEnabled = IsWindowEnabled(foundWindow),
+                        isVisible = IsWindowVisible(foundWindow)
+                    }
+                };
+                return JsonSerializer.Serialize(result);
+            }
+            else
+            {
+                var result = new
+                {
+                    success = true,
+                    found = false,
+                    message = $"Element with class name '{className}' not found"
+                };
+                return JsonSerializer.Serialize(result);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding element by class name: {ClassName}", className);
+            var result = new
+            {
+                success = false,
+                error = ex.Message
+            };
+            return JsonSerializer.Serialize(result);
+        }
+    }
+
+    /// <summary>
+    /// Find UI element by automation ID.
+    /// </summary>
+    /// <param name="automationId">The automation ID to search for</param>
+    /// <returns>A JSON string containing element information or error message</returns>
+    public async Task<string> FindElementByAutomationIdAsync(string automationId)
+    {
+        try
+        {
+            _logger.LogInformation("Searching for UI element with automation ID: {AutomationId}", automationId);
+            
+            // For Windows API implementation, we'll try to parse the automationId as a window handle
+            if (IntPtr.TryParse(automationId, out var hWnd) && hWnd != IntPtr.Zero)
+            {
+                if (IsWindowVisible(hWnd))
+                {
+                    GetWindowRect(hWnd, out var rect);
+                    var windowText = GetWindowText(hWnd);
+                    var windowClassName = GetClassName(hWnd);
+                    
+                    var result = new
+                    {
+                        success = true,
+                        found = true,
+                        element = new
+                        {
+                            name = windowText,
+                            automationId = hWnd.ToString(),
+                            className = windowClassName,
+                            controlType = "Window",
+                            boundingRectangle = new
+                            {
+                                x = rect.Left,
+                                y = rect.Top,
+                                width = rect.Right - rect.Left,
+                                height = rect.Bottom - rect.Top
+                            },
+                            isEnabled = IsWindowEnabled(hWnd),
+                            isVisible = IsWindowVisible(hWnd)
+                        }
+                    };
+                    return JsonSerializer.Serialize(result);
+                }
+            }
+            
+            var notFoundResult = new
+            {
+                success = true,
+                found = false,
+                message = $"Element with automation ID '{automationId}' not found"
+            };
+            return JsonSerializer.Serialize(notFoundResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding element by automation ID: {AutomationId}", automationId);
+            var result = new
+            {
+                success = false,
+                error = ex.Message
+            };
+            return JsonSerializer.Serialize(result);
+        }
+    }
+
+    /// <summary>
+    /// Get properties of UI element at specified coordinates.
+    /// </summary>
+    /// <param name="x">X coordinate</param>
+    /// <param name="y">Y coordinate</param>
+    /// <returns>A JSON string containing element properties or error message</returns>
+    public async Task<string> GetElementPropertiesAsync(int x, int y)
+    {
+        try
+        {
+            _logger.LogInformation("Getting element properties at coordinates: ({X}, {Y})", x, y);
+            
+            var point = new POINT { X = x, Y = y };
+            var hWnd = WindowFromPoint(point);
+            
+            if (hWnd != IntPtr.Zero)
+            {
+                GetWindowRect(hWnd, out var rect);
+                var windowText = GetWindowText(hWnd);
+                var windowClassName = GetClassName(hWnd);
+                
+                var result = new
+                {
+                    success = true,
+                    found = true,
+                    coordinates = new { x, y },
+                    element = new
+                    {
+                        name = windowText,
+                        automationId = hWnd.ToString(),
+                        className = windowClassName,
+                        controlType = "Window",
+                        boundingRectangle = new
+                        {
+                            x = rect.Left,
+                            y = rect.Top,
+                            width = rect.Right - rect.Left,
+                            height = rect.Bottom - rect.Top
+                        },
+                        isEnabled = IsWindowEnabled(hWnd),
+                        isVisible = IsWindowVisible(hWnd),
+                        hasKeyboardFocus = GetForegroundWindow() == hWnd,
+                        isKeyboardFocusable = IsWindowEnabled(hWnd)
+                    }
+                };
+                return JsonSerializer.Serialize(result);
+            }
+            else
+            {
+                var result = new
+                {
+                    success = true,
+                    found = false,
+                    coordinates = new { x, y },
+                    message = $"No UI element found at coordinates ({x}, {y})"
+                };
+                return JsonSerializer.Serialize(result);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting element properties at coordinates: ({X}, {Y})", x, y);
+            var result = new
+            {
+                success = false,
+                coordinates = new { x, y },
+                error = ex.Message
+            };
+            return JsonSerializer.Serialize(result);
+        }
+    }
+
+    /// <summary>
+    /// Wait for UI element to appear with specified selector.
+    /// </summary>
+    /// <param name="selector">The selector to wait for (text, className, or automationId)</param>
+    /// <param name="selectorType">The type of selector: "text", "className", or "automationId"</param>
+    /// <param name="timeout">Timeout in milliseconds</param>
+    /// <returns>A JSON string containing element information or timeout message</returns>
+    public async Task<string> WaitForElementAsync(string selector, string selectorType, int timeout = 5000)
+    {
+        try
+        {
+            _logger.LogInformation("Waiting for UI element with {SelectorType}: {Selector}, timeout: {Timeout}ms", selectorType, selector, timeout);
+            
+            var startTime = DateTime.Now;
+            var timeoutSpan = TimeSpan.FromMilliseconds(timeout);
+            
+            while (DateTime.Now - startTime < timeoutSpan)
+            {
+                try
+                {
+                    var foundWindow = IntPtr.Zero;
+                    
+                    EnumWindows((hWnd, lParam) =>
+                    {
+                        var match = selectorType.ToLower() switch
+                        {
+                            "text" => GetWindowText(hWnd).Contains(selector, StringComparison.OrdinalIgnoreCase),
+                            "classname" => GetClassName(hWnd).Equals(selector, StringComparison.OrdinalIgnoreCase),
+                            "automationid" => IntPtr.TryParse(selector, out var targetHWnd) && hWnd == targetHWnd,
+                            _ => throw new ArgumentException($"Invalid selector type: {selectorType}")
+                        };
+                        
+                        if (match && IsWindowVisible(hWnd))
+                        {
+                            foundWindow = hWnd;
+                            return false; // Stop enumeration
+                        }
+                        return true; // Continue enumeration
+                    }, IntPtr.Zero);
+                    
+                    if (foundWindow != IntPtr.Zero)
+                    {
+                        GetWindowRect(foundWindow, out var rect);
+                        var windowText = GetWindowText(foundWindow);
+                        var windowClassName = GetClassName(foundWindow);
+                        
+                        var result = new
+                        {
+                            success = true,
+                            found = true,
+                            waitTime = (int)(DateTime.Now - startTime).TotalMilliseconds,
+                            selector,
+                            selectorType,
+                            element = new
+                            {
+                                name = windowText,
+                                automationId = foundWindow.ToString(),
+                                className = windowClassName,
+                                controlType = "Window",
+                                boundingRectangle = new
+                                {
+                                    x = rect.Left,
+                                    y = rect.Top,
+                                    width = rect.Right - rect.Left,
+                                    height = rect.Bottom - rect.Top
+                                },
+                                isEnabled = IsWindowEnabled(foundWindow),
+                                isVisible = IsWindowVisible(foundWindow)
+                            }
+                        };
+                        return JsonSerializer.Serialize(result);
+                    }
+                }
+                catch (Exception innerEx)
+                {
+                    // Window might be in transition, continue waiting
+                    _logger.LogDebug(innerEx, "Error during element search, continuing to wait");
+                }
+                
+                await Task.Delay(100); // Wait 100ms before next attempt
+            }
+            
+            // Timeout reached
+            var timeoutResult = new
+            {
+                success = true,
+                found = false,
+                timeout = true,
+                waitTime = timeout,
+                selector,
+                selectorType,
+                message = $"Element with {selectorType} '{selector}' not found within {timeout}ms timeout"
+            };
+            return JsonSerializer.Serialize(timeoutResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error waiting for element with {SelectorType}: {Selector}", selectorType, selector);
+            var result = new
+            {
+                success = false,
+                selector,
+                selectorType,
+                error = ex.Message
+            };
+            return JsonSerializer.Serialize(result);
+        }
     }
 
     /// <summary>

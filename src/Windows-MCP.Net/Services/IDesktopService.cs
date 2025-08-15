@@ -158,4 +158,42 @@ public interface IDesktopService
     /// <param name="url">The URL to open. If null or invalid, opens the default GitHub repository</param>
     /// <returns>The result message</returns>
     Task<string> OpenBrowserAsync(string? url = null);
+
+    /// <summary>
+    /// Find UI element by text content.
+    /// </summary>
+    /// <param name="text">The text to search for</param>
+    /// <returns>A JSON string containing element information or error message</returns>
+    Task<string> FindElementByTextAsync(string text);
+
+    /// <summary>
+    /// Find UI element by class name.
+    /// </summary>
+    /// <param name="className">The class name to search for</param>
+    /// <returns>A JSON string containing element information or error message</returns>
+    Task<string> FindElementByClassNameAsync(string className);
+
+    /// <summary>
+    /// Find UI element by automation ID.
+    /// </summary>
+    /// <param name="automationId">The automation ID to search for</param>
+    /// <returns>A JSON string containing element information or error message</returns>
+    Task<string> FindElementByAutomationIdAsync(string automationId);
+
+    /// <summary>
+    /// Get properties of UI element at specified coordinates.
+    /// </summary>
+    /// <param name="x">X coordinate</param>
+    /// <param name="y">Y coordinate</param>
+    /// <returns>A JSON string containing element properties or error message</returns>
+    Task<string> GetElementPropertiesAsync(int x, int y);
+
+    /// <summary>
+    /// Wait for UI element to appear with specified selector.
+    /// </summary>
+    /// <param name="selector">The selector to wait for (text, className, or automationId)</param>
+    /// <param name="selectorType">The type of selector: "text", "className", or "automationId"</param>
+    /// <param name="timeout">Timeout in milliseconds</param>
+    /// <returns>A JSON string containing element information or timeout message</returns>
+    Task<string> WaitForElementAsync(string selector, string selectorType, int timeout = 5000);
 }

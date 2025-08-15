@@ -4,6 +4,42 @@
 
 一个基于 .NET 的 Windows 桌面自动化 MCP (Model Context Protocol) 服务器，为 AI 助手提供与 Windows 桌面环境交互的能力。
 
+## 📋 目录
+
+- [功能特性](#-功能特性)
+- [演示截图](#-演示截图)
+- [技术栈](#️-技术栈)
+- [安装](#-安装)
+- [使用方法](#-使用方法)
+- [API文档](#-api-文档)
+- [项目结构](#️-项目结构)
+- [功能扩展建议](#-功能扩展建议)
+- [配置](#-配置)
+- [贡献指南](#-贡献指南)
+- [更新日志](#-更新日志)
+- [支持](#-支持)
+
+## 🚀 快速开始
+
+### 1. 安装 .NET 10
+确保您的系统已安装 .NET 10.0 Runtime 或更高版本。
+
+### 2. 全局安装（推荐）
+```bash
+dotnet tool install --global WindowsMCP.Net
+windows-mcp-net
+```
+
+### 3. 从源码运行
+```bash
+git clone https://github.com/AIDotNet/Windows-MCP.Net.git
+cd Windows-MCP.Net
+dotnet run --project src/Windows-MCP.Net.csproj
+```
+
+### 4. 配置MCP客户端
+在您的MCP客户端中添加服务器配置，即可开始使用！
+
 ## 🚀 功能特性
 
 ### 核心功能
@@ -70,6 +106,16 @@
 | **ExtractTextFromRegionTool** | 使用OCR从屏幕指定区域提取文字 |
 | **FindTextOnScreenTool** | 使用OCR在屏幕上查找指定文字 |
 | **GetTextCoordinatesTool** | 获取屏幕上文字的坐标位置 |
+
+## UI元素识别工具
+
+| 工具名称 | 功能描述 |
+|---------|----------|
+| **FindElementByTextTool** | 通过文本内容查找UI元素 |
+| **FindElementByClassNameTool** | 通过类名查找UI元素 |
+| **FindElementByAutomationIdTool** | 通过自动化ID查找UI元素 |
+| **GetElementPropertiesTool** | 获取指定坐标元素的属性信息 |
+| **WaitForElementTool** | 等待指定元素出现在界面上 |
 
 ## 📸 演示截图
 
@@ -273,6 +319,61 @@ src/
 └── Windows-MCP.Net.sln      # 解决方案文件
 ```
 
+## 🚧 功能扩展建议
+
+### 计划中的功能
+
+#### 高级UI识别与交互
+- **UI元素识别增强**: 支持更多UI框架（WPF、WinForms、UWP）
+- **OCR文字识别优化**: 多语言支持，提升识别准确率
+- **智能等待机制**: 动态等待元素加载完成
+
+#### 文件系统操作增强
+- **高级文件搜索**: 支持内容搜索、正则表达式匹配
+- **批量文件操作**: 支持批量复制、移动、重命名
+- **文件监控**: 实时监控文件系统变化
+
+#### 系统监控与性能分析
+- **系统资源监控**: CPU、内存、磁盘、网络使用情况
+- **进程管理**: 进程列表获取、性能监控、进程控制
+- **性能分析报告**: 生成详细的系统性能报告
+
+#### 多媒体处理能力
+- **音频控制**: 系统音量控制、音频设备管理
+- **图像处理**: 图片缩放、裁剪、格式转换
+- **屏幕录制**: 支持屏幕录制和回放
+
+#### 网络与通信功能
+- **网络诊断**: Ping、端口扫描、连通性测试
+- **HTTP客户端**: 支持RESTful API调用
+- **WiFi管理**: WiFi网络扫描和连接管理
+
+#### 安全性与权限管理
+- **权限检查**: 用户权限验证和管理
+- **数据加密**: 敏感数据加密存储
+- **操作审计**: 完整的操作日志和审计追踪
+
+### 开发路线图
+
+#### 第一阶段（高优先级）- 核心功能增强
+- ✅ UI元素识别工具（已完成Windows API实现）
+- 🔄 文件管理工具增强
+- 📋 系统监控工具
+- 🔒 基础安全工具
+
+#### 第二阶段（中优先级）- 功能扩展
+- 📋 OCR文字识别优化
+- 📋 高级文件搜索
+- 📋 音频控制工具
+- 📋 网络诊断工具
+- 📋 Excel操作支持
+
+#### 第三阶段（低优先级）- 高级功能
+- 📋 图像处理工具
+- 📋 任务调度系统
+- 📋 数据库操作支持
+- 📋 宏录制与回放
+
 ## 🔧 配置
 
 ### 日志配置
@@ -299,6 +400,76 @@ src/
 - [.NET 文档](https://docs.microsoft.com/dotnet/)
 - [Windows API 文档](https://docs.microsoft.com/windows/win32/)
 
+## 🤝 贡献指南
+
+我们欢迎社区贡献！如果您想为项目做出贡献，请遵循以下步骤：
+
+### 开发环境设置
+
+1. **克隆仓库**
+   ```bash
+   git clone https://github.com/AIDotNet/Windows-MCP.Net.git
+   cd Windows-MCP.Net
+   ```
+
+2. **安装依赖**
+   ```bash
+   dotnet restore
+   ```
+
+3. **运行测试**
+   ```bash
+   dotnet test
+   ```
+
+4. **构建项目**
+   ```bash
+   dotnet build
+   ```
+
+### 贡献流程
+
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 创建 Pull Request
+
+### 代码规范
+
+- 遵循 C# 编码规范
+- 为新功能添加单元测试
+- 更新相关文档
+- 确保所有测试通过
+
+### 问题报告
+
+在报告问题时，请提供：
+- 操作系统版本
+- .NET 版本
+- 详细的错误信息
+- 重现步骤
+
+## 📋 更新日志
+
+### v1.2.0 (最新)
+- ✅ **新增**: UI元素识别工具，支持通过文本、类名、自动化ID查找元素
+- ✅ **优化**: 使用Windows API重构UI识别功能，提升性能和兼容性
+- ✅ **修复**: 解决了DesktopService中变量重复声明的编译错误
+- ✅ **测试**: 新增UI元素识别功能的单元测试和演示程序
+
+### v1.1.0
+- ✅ **新增**: OCR文字识别工具
+- ✅ **新增**: 文件系统操作工具
+- ✅ **优化**: 改进错误处理和日志记录
+- ✅ **文档**: 完善API文档和使用示例
+
+### v1.0.0
+- ✅ **发布**: 首个稳定版本
+- ✅ **功能**: 基础桌面自动化功能
+- ✅ **支持**: MCP协议集成
+- ✅ **工具**: 鼠标、键盘、窗口管理等核心工具
+
 ## 📞 支持
 
 如果您遇到问题或有建议，请：
@@ -306,7 +477,17 @@ src/
 1. 查看 [Issues](https://github.com/xuzeyu91/Windows-MCP.Net/issues)
 2. 创建新的 Issue
 3. 参与讨论
+4. 查看 [Wiki](https://github.com/xuzeyu91/Windows-MCP.Net/wiki) 获取更多帮助
+
+### 社区
+
+- 💬 [Discussions](https://github.com/xuzeyu91/Windows-MCP.Net/discussions) - 讨论和问答
+- 📧 Email: support@windows-mcp.net
+- 🐛 [Bug Reports](https://github.com/xuzeyu91/Windows-MCP.Net/issues/new?template=bug_report.md)
+- 💡 [Feature Requests](https://github.com/xuzeyu91/Windows-MCP.Net/issues/new?template=feature_request.md)
 
 ---
 
 **注意**: 本工具需要适当的 Windows 权限来执行桌面自动化操作。请确保在受信任的环境中使用。
+
+**免责声明**: 使用本工具进行自动化操作时，请遵守相关法律法规和软件使用协议。开发者不承担因误用工具而产生的任何责任。
