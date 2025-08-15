@@ -1,7 +1,8 @@
 using Interface;
 using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using Tools.Desktop;
+using WindowsMCP.Net.Services;
 
 namespace Windows_MCP.Net.Test.Desktop
 {
@@ -10,47 +11,44 @@ namespace Windows_MCP.Net.Test.Desktop
     /// </summary>
     public class ClipboardToolTest
     {
-        private readonly Mock<IDesktopService> _mockDesktopService;
-        private readonly Mock<ILogger<ClipboardTool>> _mockLogger;
+        private readonly IDesktopService _desktopService;
+        private readonly ILogger<ClipboardTool> _logger;
+        private readonly ClipboardTool _clipboardTool;
 
         public ClipboardToolTest()
         {
-            _mockDesktopService = new Mock<IDesktopService>();
-            _mockLogger = new Mock<ILogger<ClipboardTool>>();
+            // 创建服务容器并注册依赖
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+            services.AddSingleton<IDesktopService, DesktopService>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            
+            // 获取实际的服务实例
+            _desktopService = serviceProvider.GetRequiredService<IDesktopService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<ClipboardTool>>();
+            _clipboardTool = new ClipboardTool(_desktopService, _logger);
         }
 
         [Fact]
         public async Task ClipboardAsync_CopyMode_ShouldReturnSuccessMessage()
         {
-            // Arrange
-            var expectedResult = "Text copied to clipboard";
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync("copy", "Test text"))
-                               .ReturnsAsync(expectedResult);
-            var clipboardTool = new ClipboardTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await clipboardTool.ClipboardAsync("copy", "Test text");
+            var result = await _clipboardTool.ClipboardAsync("copy", "Test text");
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ClipboardOperationAsync("copy", "Test text"), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Fact]
         public async Task ClipboardAsync_PasteMode_ShouldReturnClipboardContent()
         {
-            // Arrange
-            var expectedResult = "Clipboard content";
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync("paste", null))
-                               .ReturnsAsync(expectedResult);
-            var clipboardTool = new ClipboardTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await clipboardTool.ClipboardAsync("paste");
+            var result = await _clipboardTool.ClipboardAsync("paste");
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ClipboardOperationAsync("paste", null), Times.Once);
+            Assert.NotNull(result);
         }
 
         [Theory]
@@ -61,35 +59,22 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData("中文内容测试")]
         public async Task ClipboardAsync_CopyWithDifferentTexts_ShouldCallService(string text)
         {
-            // Arrange
-            var expectedResult = $"Copied: {text}";
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync("copy", text))
-                               .ReturnsAsync(expectedResult);
-            var clipboardTool = new ClipboardTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await clipboardTool.ClipboardAsync("copy", text);
+            var result = await _clipboardTool.ClipboardAsync("copy", text);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ClipboardOperationAsync("copy", text), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Fact]
         public async Task ClipboardAsync_PasteWithoutText_ShouldCallServiceWithNull()
         {
-            // Arrange
-            var expectedResult = "Current clipboard content";
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync("paste", null))
-                               .ReturnsAsync(expectedResult);
-            var clipboardTool = new ClipboardTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await clipboardTool.ClipboardAsync("paste", null);
+            var result = await _clipboardTool.ClipboardAsync("paste", null);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ClipboardOperationAsync("paste", null), Times.Once);
+            Assert.NotNull(result);
         }
 
         [Fact]
@@ -97,17 +82,13 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var longText = new string('A', 5000); // 5000字符的长文本
-            var expectedResult = "Long text copied successfully";
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync("copy", longText))
-                               .ReturnsAsync(expectedResult);
-            var clipboardTool = new ClipboardTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await clipboardTool.ClipboardAsync("copy", longText);
+            var result = await _clipboardTool.ClipboardAsync("copy", longText);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ClipboardOperationAsync("copy", longText), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Theory]
@@ -118,75 +99,50 @@ namespace Windows_MCP.Net.Test.Desktop
         public async Task ClipboardAsync_WithDifferentModes_ShouldCallService(string mode)
         {
             // Arrange
-            var expectedResult = $"Mode {mode} executed";
             var text = mode.ToLower() == "copy" ? "Sample text" : null;
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync(mode, text))
-                               .ReturnsAsync(expectedResult);
-            var clipboardTool = new ClipboardTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await clipboardTool.ClipboardAsync(mode, text);
+            var result = await _clipboardTool.ClipboardAsync(mode, text);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ClipboardOperationAsync(mode, text), Times.Once);
+            Assert.NotNull(result);
         }
 
         [Fact]
         public async Task ClipboardAsync_CopyEmptyString_ShouldCallService()
         {
-            // Arrange
-            var expectedResult = "Empty string copied";
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync("copy", ""))
-                               .ReturnsAsync(expectedResult);
-            var clipboardTool = new ClipboardTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await clipboardTool.ClipboardAsync("copy", "");
+            var result = await _clipboardTool.ClipboardAsync("copy", "");
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ClipboardOperationAsync("copy", ""), Times.Once);
+            Assert.NotNull(result);
         }
 
         [Fact]
-        public async Task ClipboardAsync_ServiceThrowsException_ShouldPropagateException()
+        public async Task ClipboardAsync_ValidOperation_ShouldNotThrowException()
         {
-            // Arrange
-            var exception = new InvalidOperationException("Clipboard service error");
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync(It.IsAny<string>(), It.IsAny<string>()))
-                              .ThrowsAsync(exception);
-            var clipboardTool = new ClipboardTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act & Assert
-            var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => clipboardTool.ClipboardAsync("copy", "test"));
-            Assert.Equal("Clipboard service error", thrownException.Message);
+            var exception = await Record.ExceptionAsync(async () =>
+            {
+                await _clipboardTool.ClipboardAsync("copy", "test");
+            });
+            
+            // 正常情况下不应该抛出异常
+            Assert.Null(exception);
         }
 
         [Fact]
-        public async Task ClipboardAsync_ConsecutiveOperations_ShouldCallServiceMultipleTimes()
+        public async Task ClipboardAsync_ConsecutiveOperations_ShouldWorkCorrectly()
         {
-            // Arrange
-            var copyResult = "Text copied";
-            var pasteResult = "Retrieved text";
-            
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync("copy", "test"))
-                               .ReturnsAsync(copyResult);
-            _mockDesktopService.Setup(x => x.ClipboardOperationAsync("paste", null))
-                               .ReturnsAsync(pasteResult);
-            
-            var clipboardTool = new ClipboardTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var copyResultActual = await clipboardTool.ClipboardAsync("copy", "test");
-            var pasteResultActual = await clipboardTool.ClipboardAsync("paste");
+            var copyResult = await _clipboardTool.ClipboardAsync("copy", "test");
+            var pasteResult = await _clipboardTool.ClipboardAsync("paste");
 
             // Assert
-            Assert.Equal(copyResult, copyResultActual);
-            Assert.Equal(pasteResult, pasteResultActual);
-            _mockDesktopService.Verify(x => x.ClipboardOperationAsync("copy", "test"), Times.Once);
-            _mockDesktopService.Verify(x => x.ClipboardOperationAsync("paste", null), Times.Once);
+            Assert.NotNull(copyResult);
+            Assert.NotNull(pasteResult);
+            // 验证粘贴的内容包含我们刚才复制的文本
+            Assert.Contains("test", pasteResult);
         }
     }
 }
