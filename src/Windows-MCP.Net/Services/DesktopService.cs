@@ -377,25 +377,51 @@ public class DesktopService : IDesktopService
     {
         try
         {
-            var startInfo = new ProcessStartInfo
+            // 应用程序名称映射表，支持中英文名称
+            var appMappings = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
             {
-                FileName = "cmd.exe",
-                Arguments = $"/c start {name}",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
+                { "calculator", new[] { "calc.exe", "calculator", "计算器" } },
+                { "calc", new[] { "calc.exe", "calculator", "计算器" } },
+                { "计算器", new[] { "calc.exe", "calculator", "计算器" } },
+                { "notepad", new[] { "notepad.exe", "notepad", "记事本" } },
+                { "记事本", new[] { "notepad.exe", "notepad", "记事本" } },
+                { "paint", new[] { "mspaint.exe", "paint", "画图" } },
+                { "mspaint", new[] { "mspaint.exe", "paint", "画图" } },
+                { "画图", new[] { "mspaint.exe", "paint", "画图" } },
+                { "cmd", new[] { "cmd.exe", "cmd", "命令提示符" } },
+                { "命令提示符", new[] { "cmd.exe", "cmd", "命令提示符" } },
+                { "powershell", new[] { "powershell.exe", "powershell", "PowerShell" } },
+                { "explorer", new[] { "explorer.exe", "explorer", "资源管理器" } },
+                { "资源管理器", new[] { "explorer.exe", "explorer", "资源管理器" } }
             };
 
-            using var process = Process.Start(startInfo);
-            if (process != null)
+            // 尝试多种启动方式
+            var launchMethods = new List<Func<Task<(string Response, int Status)>>>();
+            
+            // 方法1: 如果有映射，尝试直接启动可执行文件
+            if (appMappings.TryGetValue(name, out var mappings))
             {
-                await process.WaitForExitAsync();
-                
-                // 读取错误输出以检查是否有错误
-                var errorOutput = await process.StandardError.ReadToEndAsync();
-                
-                if (process.ExitCode == 0)
+                var exeName = mappings[0]; // 第一个是可执行文件名
+                launchMethods.Add(() => TryLaunchDirectly(exeName, name));
+            }
+            
+            // 方法2: 尝试使用start命令启动
+            launchMethods.Add(() => TryLaunchWithStart(name));
+            
+            // 方法3: 如果有映射，尝试其他名称
+            if (appMappings.TryGetValue(name, out mappings))
+            {
+                foreach (var altName in mappings.Skip(1))
+                {
+                    launchMethods.Add(() => TryLaunchWithStart(altName));
+                }
+            }
+
+            // 依次尝试各种启动方法
+            foreach (var method in launchMethods)
+            {
+                var result = await method();
+                if (result.Status == 0)
                 {
                     // 等待应用启动完成
                     await Task.Delay(2000);
@@ -409,19 +435,81 @@ public class DesktopService : IDesktopService
                     
                     return ($"Successfully launched {name}", 0);
                 }
-                else
-                {
-                    // 如果有错误输出，返回具体的错误信息
-                    var errorMessage = !string.IsNullOrEmpty(errorOutput) ? errorOutput.Trim() : "Unknown error";
-                    return ($"Failed to launch {name}: {errorMessage}", 1);
-                }
             }
-            return ($"Failed to launch {name}: Process could not be started", 1);
+            
+            return ($"Failed to launch {name}: All launch methods failed", 1);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error launching application {Name}", name);
             return ($"Error launching {name}: {ex.Message}", 1);
+        }
+    }
+    
+    /// <summary>
+    /// 尝试直接启动可执行文件
+    /// </summary>
+    private async Task<(string Response, int Status)> TryLaunchDirectly(string exeName, string displayName)
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = exeName,
+                UseShellExecute = true,
+                CreateNoWindow = false
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process != null)
+            {
+                return ($"Successfully launched {displayName} directly", 0);
+            }
+            return ($"Failed to launch {displayName} directly", 1);
+        }
+        catch
+        {
+            return ($"Failed to launch {displayName} directly", 1);
+        }
+    }
+    
+    /// <summary>
+    /// 尝试使用start命令启动应用
+    /// </summary>
+    private async Task<(string Response, int Status)> TryLaunchWithStart(string name)
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c start \"\" \"{name}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process != null)
+            {
+                await process.WaitForExitAsync();
+                
+                if (process.ExitCode == 0)
+                {
+                    return ($"Successfully launched {name} with start command", 0);
+                }
+                else
+                {
+                    var errorOutput = await process.StandardError.ReadToEndAsync();
+                    return ($"Failed to launch {name} with start command: {errorOutput}", 1);
+                }
+            }
+            return ($"Failed to launch {name} with start command", 1);
+        }
+        catch
+        {
+            return ($"Failed to launch {name} with start command", 1);
         }
     }
 
@@ -1018,8 +1106,33 @@ public class DesktopService : IDesktopService
     {
         try
         {
+            // 使用相同的多语言映射逻辑
+            var titleMappings = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "calculator", new[] { "calculator", "计算器", "calc" } },
+                { "calc", new[] { "calculator", "计算器", "calc" } },
+                { "计算器", new[] { "calculator", "计算器", "calc" } },
+                { "notepad", new[] { "notepad", "记事本", "untitled" } },
+                { "记事本", new[] { "notepad", "记事本", "untitled" } },
+                { "paint", new[] { "paint", "画图", "mspaint" } },
+                { "mspaint", new[] { "paint", "画图", "mspaint" } },
+                { "画图", new[] { "paint", "画图", "mspaint" } },
+                { "cmd", new[] { "cmd", "命令提示符", "command prompt" } },
+                { "命令提示符", new[] { "cmd", "命令提示符", "command prompt" } },
+                { "powershell", new[] { "powershell", "windows powershell" } },
+                { "explorer", new[] { "explorer", "资源管理器", "file explorer" } },
+                { "资源管理器", new[] { "explorer", "资源管理器", "file explorer" } }
+            };
+
             var foundWindow = IntPtr.Zero;
             var windowTitle = string.Empty;
+            
+            // 获取要搜索的标题列表
+            var searchTitles = new List<string> { appName };
+            if (titleMappings.TryGetValue(appName, out var mappings))
+            {
+                searchTitles.AddRange(mappings);
+            }
             
             // 枚举所有可见窗口，查找包含应用名称的窗口
             EnumWindows((hWnd, lParam) =>
@@ -1027,14 +1140,19 @@ public class DesktopService : IDesktopService
                 if (IsWindowVisible(hWnd))
                 {
                     var title = GetWindowTitle(hWnd);
-                    if (!string.IsNullOrEmpty(title) && 
-                        title != "Program Manager" &&
-                        (title.ToLower().Contains(appName.ToLower()) || 
-                         appName.ToLower().Contains(title.ToLower().Split(' ')[0])))
+                    if (!string.IsNullOrEmpty(title) && title != "Program Manager")
                     {
-                        foundWindow = hWnd;
-                        windowTitle = title;
-                        return false; // 停止枚举
+                        // 检查是否匹配任何一个搜索标题
+                        foreach (var searchTitle in searchTitles)
+                        {
+                            if (title.Contains(searchTitle, StringComparison.OrdinalIgnoreCase) ||
+                                searchTitle.Contains(title, StringComparison.OrdinalIgnoreCase))
+                            {
+                                foundWindow = hWnd;
+                                windowTitle = title;
+                                return false; // 停止枚举
+                            }
+                        }
                     }
                 }
                 return true;
@@ -1063,20 +1181,54 @@ public class DesktopService : IDesktopService
     /// <summary>
     /// 根据窗口标题查找窗口句柄
     /// </summary>
-    /// <param name="title">要查找的窗口标题（支持部分匹配）</param>
+    /// <param name="title">要查找的窗口标题（支持部分匹配和多语言映射）</param>
     /// <returns>找到的窗口句柄，如果未找到则返回IntPtr.Zero</returns>
     private IntPtr FindWindowByTitle(string title)
     {
+        // 应用程序窗口标题映射表，支持中英文标题
+        var titleMappings = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "calculator", new[] { "calculator", "计算器", "calc" } },
+            { "calc", new[] { "calculator", "计算器", "calc" } },
+            { "计算器", new[] { "calculator", "计算器", "calc" } },
+            { "notepad", new[] { "notepad", "记事本", "untitled" } },
+            { "记事本", new[] { "notepad", "记事本", "untitled" } },
+            { "paint", new[] { "paint", "画图", "mspaint" } },
+            { "mspaint", new[] { "paint", "画图", "mspaint" } },
+            { "画图", new[] { "paint", "画图", "mspaint" } },
+            { "cmd", new[] { "cmd", "命令提示符", "command prompt" } },
+            { "命令提示符", new[] { "cmd", "命令提示符", "command prompt" } },
+            { "powershell", new[] { "powershell", "windows powershell" } },
+            { "explorer", new[] { "explorer", "资源管理器", "file explorer" } },
+            { "资源管理器", new[] { "explorer", "资源管理器", "file explorer" } }
+        };
+
         IntPtr foundWindow = IntPtr.Zero;
+        
+        // 获取要搜索的标题列表
+        var searchTitles = new List<string> { title };
+        if (titleMappings.TryGetValue(title, out var mappings))
+        {
+            searchTitles.AddRange(mappings);
+        }
+        
         EnumWindows((hWnd, lParam) =>
         {
             if (IsWindowVisible(hWnd))
             {
                 var windowTitle = GetWindowTitle(hWnd);
-                if (windowTitle.Contains(title, StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(windowTitle))
                 {
-                    foundWindow = hWnd;
-                    return false; // Stop enumeration
+                    // 检查是否匹配任何一个搜索标题
+                    foreach (var searchTitle in searchTitles)
+                    {
+                        if (windowTitle.Contains(searchTitle, StringComparison.OrdinalIgnoreCase) ||
+                            searchTitle.Contains(windowTitle, StringComparison.OrdinalIgnoreCase))
+                        {
+                            foundWindow = hWnd;
+                            return false; // Stop enumeration
+                        }
+                    }
                 }
             }
             return true;
