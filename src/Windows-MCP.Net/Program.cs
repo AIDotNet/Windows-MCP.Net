@@ -19,7 +19,7 @@ Log.Logger = new LoggerConfiguration()
    .Enrich.FromLogContext()
    .WriteTo.Console()
    .WriteTo.File(
-       "logs/log-.txt",
+       "logs/winmcplog-.txt",
        rollingInterval: RollingInterval.Day, 
        retainedFileCountLimit: 31,
        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
