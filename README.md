@@ -26,28 +26,7 @@
 
 **重要提示**: 本项目需要 .NET 10 才能运行，请先确保你的本地安装了 .NET 10。如果尚未安装，请访问 [.NET 10 下载页面](https://dotnet.microsoft.com/zh-cn/download/dotnet/10.0) 进行下载和安装。
 
-### 1. 安装和运行
-
-#### 方式一：全局安装（推荐）
-```bash
-dotnet tool install --global WindowsMCP.Net
-windows-mcp-net
-```
-
-#### 方式二：从源码运行
-```bash
-# 克隆仓库
-git clone https://github.com/AIDotNet/Windows-MCP.Net.git
-cd Windows-MCP.Net
-
-# 构建项目
-dotnet build
-
-# 运行项目
-dotnet run --project src/Windows-MCP.Net.csproj
-```
-
-### 2. MCP 客户端配置
+### 1. MCP 客户端配置
 
 在您的 MCP 客户端配置中添加以下配置：
 
@@ -101,6 +80,26 @@ dotnet run --project src/Windows-MCP.Net.csproj
 ```
 
 > **注意**: 使用项目源码方式便于开发调试，修改代码后无需重新安装即可生效。VS Code 1.102+ 版本支持MCP服务器的自动发现和管理。
+
+### 2. 安装和运行
+
+#### 方式一：全局安装（推荐）
+```bash
+dotnet tool install --global WindowsMCP.Net
+```
+
+#### 方式二：从源码运行
+```bash
+# 克隆仓库
+git clone https://github.com/AIDotNet/Windows-MCP.Net.git
+cd Windows-MCP.Net
+
+# 构建项目
+dotnet build
+
+# 运行项目
+dotnet run --project src/Windows-MCP.Net.csproj
+```
 
 ### 3. 开始使用
 配置完成后，重启您的MCP客户端，即可开始使用Windows桌面自动化功能！
