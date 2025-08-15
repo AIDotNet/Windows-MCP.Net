@@ -5,10 +5,10 @@ using System.Text.Json;
 using Tools.Desktop;
 using WindowsMCP.Net.Services;
 
-namespace Windows_MCP.Net.Test
+namespace Windows_MCP.Net.Test.Desktop
 {
     /// <summary>
-    /// UI元素识别工具测试类
+    /// UIElementTool单元测试类
     /// </summary>
     public class UIElementToolTest
     {
