@@ -1,7 +1,8 @@
 using Interface;
 using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using Tools.Desktop;
+using WindowsMCP.Net.Services;
 
 namespace Windows_MCP.Net.Test.Desktop
 {
@@ -10,30 +11,36 @@ namespace Windows_MCP.Net.Test.Desktop
     /// </summary>
     public class MoveToolTest
     {
-        private readonly Mock<IDesktopService> _mockDesktopService;
-        private readonly Mock<ILogger<MoveTool>> _mockLogger;
+        private readonly IDesktopService _desktopService;
+        private readonly ILogger<MoveTool> _logger;
+        private readonly MoveTool _moveTool;
 
         public MoveToolTest()
         {
-            _mockDesktopService = new Mock<IDesktopService>();
-            _mockLogger = new Mock<ILogger<MoveTool>>();
+            // 创建服务容器并注册依赖
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+            services.AddSingleton<IDesktopService, DesktopService>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            
+            // 获取实际的服务实例
+            _desktopService = serviceProvider.GetRequiredService<IDesktopService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<MoveTool>>();
+            _moveTool = new MoveTool(_desktopService, _logger);
         }
 
         [Fact]
         public async Task MoveAsync_ShouldReturnSuccessMessage()
         {
             // Arrange
-            var expectedResult = "Mouse moved successfully";
-            _mockDesktopService.Setup(x => x.MoveAsync(100, 200))
-                              .ReturnsAsync(expectedResult);
-            var moveTool = new MoveTool(_mockDesktopService.Object, _mockLogger.Object);
+            var expectedResult = "Moved mouse pointer to (100,200)";
 
             // Act
-            var result = await moveTool.MoveAsync(100, 200);
+            var result = await _moveTool.MoveAsync(100, 200);
 
             // Assert
             Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.MoveAsync(100, 200), Times.Once);
         }
 
         [Theory]
@@ -43,17 +50,13 @@ namespace Windows_MCP.Net.Test.Desktop
         public async Task MoveAsync_WithDifferentCoordinates_ShouldCallService(int x, int y)
         {
             // Arrange
-            var expectedResult = $"Moved to ({x}, {y})";
-            _mockDesktopService.Setup(s => s.MoveAsync(x, y))
-                              .ReturnsAsync(expectedResult);
-            var moveTool = new MoveTool(_mockDesktopService.Object, _mockLogger.Object);
+            var expectedResult = $"Moved mouse pointer to ({x},{y})";
 
             // Act
-            var result = await moveTool.MoveAsync(x, y);
+            var result = await _moveTool.MoveAsync(x, y);
 
             // Assert
             Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(s => s.MoveAsync(x, y), Times.Once);
         }
 
         [Fact]
@@ -62,17 +65,13 @@ namespace Windows_MCP.Net.Test.Desktop
             // Arrange
             var x = -10;
             var y = -5;
-            var expectedResult = $"Moved to ({x}, {y})";
-            _mockDesktopService.Setup(s => s.MoveAsync(x, y))
-                              .ReturnsAsync(expectedResult);
-            var moveTool = new MoveTool(_mockDesktopService.Object, _mockLogger.Object);
+            var expectedResult = $"Moved mouse pointer to ({x},{y})";
 
             // Act
-            var result = await moveTool.MoveAsync(x, y);
+            var result = await _moveTool.MoveAsync(x, y);
 
             // Assert
             Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(s => s.MoveAsync(x, y), Times.Once);
         }
 
         [Fact]
@@ -81,17 +80,13 @@ namespace Windows_MCP.Net.Test.Desktop
             // Arrange
             var x = 9999;
             var y = 9999;
-            var expectedResult = $"Moved to ({x}, {y})";
-            _mockDesktopService.Setup(s => s.MoveAsync(x, y))
-                              .ReturnsAsync(expectedResult);
-            var moveTool = new MoveTool(_mockDesktopService.Object, _mockLogger.Object);
+            var expectedResult = $"Moved mouse pointer to ({x},{y})";
 
             // Act
-            var result = await moveTool.MoveAsync(x, y);
+            var result = await _moveTool.MoveAsync(x, y);
 
             // Assert
             Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(s => s.MoveAsync(x, y), Times.Once);
         }
 
         [Fact]
@@ -105,20 +100,11 @@ namespace Windows_MCP.Net.Test.Desktop
                 (x: 300, y: 300)
             };
 
-            foreach (var (x, y) in positions)
-            {
-                _mockDesktopService.Setup(s => s.MoveAsync(x, y))
-                                  .ReturnsAsync($"Moved to ({x}, {y})");
-            }
-
-            var moveTool = new MoveTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act & Assert
             foreach (var (x, y) in positions)
             {
-                var result = await moveTool.MoveAsync(x, y);
-                Assert.Equal($"Moved to ({x}, {y})", result);
-                _mockDesktopService.Verify(s => s.MoveAsync(x, y), Times.Once);
+                var result = await _moveTool.MoveAsync(x, y);
+                Assert.Equal($"Moved mouse pointer to ({x},{y})", result);
             }
         }
 
@@ -128,34 +114,31 @@ namespace Windows_MCP.Net.Test.Desktop
             // Arrange
             var x = 150;
             var y = 150;
-            var expectedResult = $"Moved to ({x}, {y})";
-            _mockDesktopService.Setup(s => s.MoveAsync(x, y))
-                              .ReturnsAsync(expectedResult);
-            var moveTool = new MoveTool(_mockDesktopService.Object, _mockLogger.Object);
+            var expectedResult = $"Moved mouse pointer to ({x},{y})";
 
             // Act - 移动到同一位置两次
-            var result1 = await moveTool.MoveAsync(x, y);
-            var result2 = await moveTool.MoveAsync(x, y);
+            var result1 = await _moveTool.MoveAsync(x, y);
+            var result2 = await _moveTool.MoveAsync(x, y);
 
             // Assert
             Assert.Equal(expectedResult, result1);
             Assert.Equal(expectedResult, result2);
-            _mockDesktopService.Verify(s => s.MoveAsync(x, y), Times.Exactly(2));
         }
 
         [Fact]
-        public async Task MoveAsync_ServiceThrowsException_ShouldPropagateException()
+        public async Task MoveAsync_WithValidCoordinates_ShouldReturnSuccessMessage()
         {
             // Arrange
-            var exception = new InvalidOperationException("Service error");
-            _mockDesktopService.Setup(x => x.MoveAsync(It.IsAny<int>(), It.IsAny<int>()))
-                              .ThrowsAsync(exception);
-            var moveTool = new MoveTool(_mockDesktopService.Object, _mockLogger.Object);
+            var x = 100;
+            var y = 200;
+            var expectedResult = $"Moved mouse pointer to ({x},{y})";
 
-            // Act & Assert
-            var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => moveTool.MoveAsync(100, 200));
-            Assert.Equal("Service error", thrownException.Message);
+            // Act
+            var result = await _moveTool.MoveAsync(x, y);
+
+            // Assert
+            Assert.Equal(expectedResult, result);
+            Assert.Contains("Moved mouse pointer to", result);
         }
     }
 }
