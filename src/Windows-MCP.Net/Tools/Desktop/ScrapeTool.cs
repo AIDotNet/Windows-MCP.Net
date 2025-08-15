@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
-using WindowsMCP.Net.Services;
 using System.ComponentModel;
 using HtmlAgilityPack;
 using ReverseMarkdown;
+using Interface;
 
 namespace Tools.Desktop;
 

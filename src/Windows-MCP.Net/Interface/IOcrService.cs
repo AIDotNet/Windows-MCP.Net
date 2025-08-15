@@ -1,6 +1,6 @@
 using System.Drawing;
 
-namespace WindowsMCP.Net.Services;
+namespace Interface;
 
 /// <summary>
 /// Interface for OCR (Optical Character Recognition) services.

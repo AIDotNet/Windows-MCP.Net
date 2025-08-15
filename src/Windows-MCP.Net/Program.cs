@@ -6,6 +6,7 @@ using Serilog;
 using WindowsMCP.Net.Services;
 using WindowsMCP.Net.Tools;
 using System.Reflection;
+using Interface;
 
 /// <summary>
 /// Main entry point for the Windows MCP Server application.

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using HtmlAgilityPack;
 using ReverseMarkdown;
+using Interface;
 
 namespace WindowsMCP.Net.Services;
 

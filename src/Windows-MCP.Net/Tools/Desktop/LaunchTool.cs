@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
-using WindowsMCP.Net.Services;
 using System.ComponentModel;
 using ModelContextProtocol.Server;
+using Interface;
 
 namespace Tools.Desktop;
 

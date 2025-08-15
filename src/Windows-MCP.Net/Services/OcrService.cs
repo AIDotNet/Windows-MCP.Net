@@ -6,6 +6,7 @@ using Sdcb.OpenVINO.PaddleOCR;
 using Sdcb.OpenVINO.PaddleOCR.Models.Online;
 using Sdcb.OpenVINO.PaddleOCR.Models;
 using System.Runtime.InteropServices;
+using Interface;
 
 
 namespace WindowsMCP.Net.Services;

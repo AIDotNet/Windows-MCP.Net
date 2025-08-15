@@ -3,7 +3,7 @@ using Moq;
 using System.Drawing;
 using System.Text.Json;
 using WindowsMCP.Net.Tools.OCR;
-using WindowsMCP.Net.Services;
+using Interface;
 
 namespace Windows_MCP.Net.Test
 {
