@@ -6,7 +6,7 @@
     {
       "registry_name": "nuget",
       "name": "WindowsMCP.Net",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "package_arguments": [],
       "environment_variables": []
     }
@@ -16,6 +16,6 @@
     "source": "github"
   },
   "version_detail": {
-    "version": "0.2.4"
+    "version": "0.2.5"
   }
 }
