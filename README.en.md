@@ -254,21 +254,67 @@ Run `MCP: Open User Configuration` through VS Code command palette, add:
 
 ```
 src/
-├── .mcp/                 # MCP server configuration
-├── Exceptions/           # Custom exception classes
-├── Models/              # Data models
-├── Prompts/             # Prompt templates
-├── Services/            # Core services
-│   ├── DesktopService.cs    # Desktop operation service implementation
-│   └── IDesktopService.cs   # Desktop service interface
-├── Tools/               # MCP tool implementations
-│   ├── ClickTool.cs         # Click tool
-│   ├── LaunchTool.cs        # Launch tool
-│   ├── TypeTool.cs          # Input tool
-│   └── ...                  # Other tools
-├── Program.cs           # Program entry point
-├── Windows-MCP.Net.csproj   # Project file
-└── Windows-MCP.Net.sln      # Solution file
+├── Windows-MCP.Net/         # Main project
+│   ├── .mcp/                # MCP server configuration
+│   │   └── server.json      # Server configuration file
+│   ├── Exceptions/          # Custom exception classes (to be extended)
+│   ├── Interface/           # Service interface definitions
+│   │   ├── IDesktopService.cs   # Desktop service interface
+│   │   ├── IFileSystemService.cs # File system service interface
+│   │   └── IOcrService.cs       # OCR service interface
+│   ├── Models/              # Data models (to be extended)
+│   ├── Prompts/             # Prompt templates (to be extended)
+│   ├── Services/            # Core service implementations
+│   │   ├── DesktopService.cs    # Desktop operation service
+│   │   ├── FileSystemService.cs # File system service
+│   │   └── OcrService.cs        # OCR service
+│   ├── Tools/               # MCP tool implementations
+│   │   ├── Desktop/             # Desktop operation tools
+│   │   │   ├── ClickTool.cs         # Click tool
+│   │   │   ├── ClipboardTool.cs     # Clipboard tool
+│   │   │   ├── DragTool.cs          # Drag tool
+│   │   │   ├── GetWindowInfoTool.cs # Window info tool
+│   │   │   ├── KeyTool.cs           # Key press tool
+│   │   │   ├── LaunchTool.cs        # Application launch tool
+│   │   │   ├── MoveTool.cs          # Mouse move tool
+│   │   │   ├── OpenBrowserTool.cs   # Browser open tool
+│   │   │   ├── PowershellTool.cs    # PowerShell execution tool
+│   │   │   ├── ResizeTool.cs        # Window resize tool
+│   │   │   ├── ScrapeTool.cs        # Web scraping tool
+│   │   │   ├── ScreenshotTool.cs    # Screenshot tool
+│   │   │   ├── ScrollTool.cs        # Scroll tool
+│   │   │   ├── ShortcutTool.cs      # Keyboard shortcut tool
+│   │   │   ├── StateTool.cs         # Desktop state tool
+│   │   │   ├── SwitchTool.cs        # Application switch tool
+│   │   │   ├── TypeTool.cs          # Text input tool
+│   │   │   ├── UIElementTool.cs     # UI element operation tool
+│   │   │   └── WaitTool.cs          # Wait tool
+│   │   ├── FileSystem/          # File system tools
+│   │   │   ├── CopyFileTool.cs      # File copy tool
+│   │   │   ├── CreateDirectoryTool.cs # Directory creation tool
+│   │   │   ├── CreateFileTool.cs    # File creation tool
+│   │   │   ├── DeleteDirectoryTool.cs # Directory deletion tool
+│   │   │   ├── DeleteFileTool.cs    # File deletion tool
+│   │   │   ├── GetFileInfoTool.cs   # File info tool
+│   │   │   ├── ListDirectoryTool.cs # Directory listing tool
+│   │   │   ├── MoveFileTool.cs      # File move tool
+│   │   │   ├── ReadFileTool.cs      # File read tool
+│   │   │   ├── SearchFilesTool.cs   # File search tool
+│   │   │   └── WriteFileTool.cs     # File write tool
+│   │   └── OCR/                 # OCR recognition tools
+│   │       ├── ExtractTextFromRegionTool.cs # Region text extraction tool
+│   │       ├── ExtractTextFromScreenTool.cs # Screen text extraction tool
+│   │       ├── FindTextOnScreenTool.cs      # Screen text finding tool
+│   │       └── GetTextCoordinatesTool.cs    # Text coordinates tool
+│   ├── Program.cs           # Program entry point
+│   └── Windows-MCP.Net.csproj   # Project file
+└── Windows-MCP.Net.Test/    # Test project
+    ├── DesktopToolsExtendedTest.cs  # Desktop tools extended tests
+    ├── FileSystemToolsExtendedTest.cs # File system tools extended tests
+    ├── OCRToolsExtendedTest.cs      # OCR tools extended tests
+    ├── ToolTest.cs                  # Basic tool tests
+    ├── UIElementToolTest.cs         # UI element tool tests
+    └── Windows-MCP.Net.Test.csproj  # Test project file
 ```
 
 ## 🔧 Configuration

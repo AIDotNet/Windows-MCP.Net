@@ -273,21 +273,67 @@ dotnet run --project src/Windows-MCP.Net.csproj
 
 ```
 src/
-├── .mcp/                 # MCP 服务器配置
-├── Exceptions/           # 自定义异常类
-├── Models/              # 数据模型
-├── Prompts/             # 提示模板
-├── Services/            # 核心服务
-│   ├── DesktopService.cs    # 桌面操作服务实现
-│   └── IDesktopService.cs   # 桌面服务接口
-├── Tools/               # MCP 工具实现
-│   ├── ClickTool.cs         # 点击工具
-│   ├── LaunchTool.cs        # 启动工具
-│   ├── TypeTool.cs          # 输入工具
-│   └── ...                  # 其他工具
-├── Program.cs           # 程序入口点
-├── Windows-MCP.Net.csproj   # 项目文件
-└── Windows-MCP.Net.sln      # 解决方案文件
+├── Windows-MCP.Net/         # 主项目
+│   ├── .mcp/                # MCP 服务器配置
+│   │   └── server.json      # 服务器配置文件
+│   ├── Exceptions/          # 自定义异常类（待扩展）
+│   ├── Interface/           # 服务接口定义
+│   │   ├── IDesktopService.cs   # 桌面服务接口
+│   │   ├── IFileSystemService.cs # 文件系统服务接口
+│   │   └── IOcrService.cs       # OCR服务接口
+│   ├── Models/              # 数据模型（待扩展）
+│   ├── Prompts/             # 提示模板（待扩展）
+│   ├── Services/            # 核心服务实现
+│   │   ├── DesktopService.cs    # 桌面操作服务
+│   │   ├── FileSystemService.cs # 文件系统服务
+│   │   └── OcrService.cs        # OCR服务
+│   ├── Tools/               # MCP 工具实现
+│   │   ├── Desktop/             # 桌面操作工具
+│   │   │   ├── ClickTool.cs         # 点击工具
+│   │   │   ├── ClipboardTool.cs     # 剪贴板工具
+│   │   │   ├── DragTool.cs          # 拖拽工具
+│   │   │   ├── GetWindowInfoTool.cs # 窗口信息工具
+│   │   │   ├── KeyTool.cs           # 按键工具
+│   │   │   ├── LaunchTool.cs        # 启动应用工具
+│   │   │   ├── MoveTool.cs          # 鼠标移动工具
+│   │   │   ├── OpenBrowserTool.cs   # 浏览器打开工具
+│   │   │   ├── PowershellTool.cs    # PowerShell执行工具
+│   │   │   ├── ResizeTool.cs        # 窗口调整工具
+│   │   │   ├── ScrapeTool.cs        # 网页抓取工具
+│   │   │   ├── ScreenshotTool.cs    # 截图工具
+│   │   │   ├── ScrollTool.cs        # 滚动工具
+│   │   │   ├── ShortcutTool.cs      # 快捷键工具
+│   │   │   ├── StateTool.cs         # 桌面状态工具
+│   │   │   ├── SwitchTool.cs        # 应用切换工具
+│   │   │   ├── TypeTool.cs          # 文本输入工具
+│   │   │   ├── UIElementTool.cs     # UI元素操作工具
+│   │   │   └── WaitTool.cs          # 等待工具
+│   │   ├── FileSystem/          # 文件系统工具
+│   │   │   ├── CopyFileTool.cs      # 文件复制工具
+│   │   │   ├── CreateDirectoryTool.cs # 目录创建工具
+│   │   │   ├── CreateFileTool.cs    # 文件创建工具
+│   │   │   ├── DeleteDirectoryTool.cs # 目录删除工具
+│   │   │   ├── DeleteFileTool.cs    # 文件删除工具
+│   │   │   ├── GetFileInfoTool.cs   # 文件信息工具
+│   │   │   ├── ListDirectoryTool.cs # 目录列表工具
+│   │   │   ├── MoveFileTool.cs      # 文件移动工具
+│   │   │   ├── ReadFileTool.cs      # 文件读取工具
+│   │   │   ├── SearchFilesTool.cs   # 文件搜索工具
+│   │   │   └── WriteFileTool.cs     # 文件写入工具
+│   │   └── OCR/                 # OCR识别工具
+│   │       ├── ExtractTextFromRegionTool.cs # 区域文本提取工具
+│   │       ├── ExtractTextFromScreenTool.cs # 屏幕文本提取工具
+│   │       ├── FindTextOnScreenTool.cs      # 屏幕文本查找工具
+│   │       └── GetTextCoordinatesTool.cs    # 文本坐标获取工具
+│   ├── Program.cs           # 程序入口点
+│   └── Windows-MCP.Net.csproj   # 项目文件
+└── Windows-MCP.Net.Test/    # 测试项目
+    ├── DesktopToolsExtendedTest.cs  # 桌面工具扩展测试
+    ├── FileSystemToolsExtendedTest.cs # 文件系统工具扩展测试
+    ├── OCRToolsExtendedTest.cs      # OCR工具扩展测试
+    ├── ToolTest.cs                  # 工具基础测试
+    ├── UIElementToolTest.cs         # UI元素工具测试
+    └── Windows-MCP.Net.Test.csproj  # 测试项目文件
 ```
 
 ## 🚧 功能扩展建议
