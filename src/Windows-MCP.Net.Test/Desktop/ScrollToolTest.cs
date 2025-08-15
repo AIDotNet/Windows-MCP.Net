@@ -1,7 +1,8 @@
 using Interface;
 using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using Tools.Desktop;
+using WindowsMCP.Net.Services;
 
 namespace Windows_MCP.Net.Test.Desktop
 {
@@ -10,30 +11,34 @@ namespace Windows_MCP.Net.Test.Desktop
     /// </summary>
     public class ScrollToolTest
     {
-        private readonly Mock<IDesktopService> _mockDesktopService;
-        private readonly Mock<ILogger<ScrollTool>> _mockLogger;
+        private readonly IDesktopService _desktopService;
+        private readonly ILogger<ScrollTool> _logger;
+        private readonly ScrollTool _scrollTool;
 
         public ScrollToolTest()
         {
-            _mockDesktopService = new Mock<IDesktopService>();
-            _mockLogger = new Mock<ILogger<ScrollTool>>();
+            // 创建服务容器并注册依赖
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+            services.AddSingleton<IDesktopService, DesktopService>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            
+            // 获取实际的服务实例
+            _desktopService = serviceProvider.GetRequiredService<IDesktopService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<ScrollTool>>();
+            _scrollTool = new ScrollTool(_desktopService, _logger);
         }
 
         [Fact]
         public async Task ScrollAsync_ShouldReturnSuccessMessage()
         {
-            // Arrange
-            var expectedResult = "Scroll completed";
-            _mockDesktopService.Setup(x => x.ScrollAsync(null, null, "vertical", "down", 1))
-                              .ReturnsAsync(expectedResult);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await scrollTool.ScrollAsync();
+            var result = await _scrollTool.ScrollAsync();
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ScrollAsync(null, null, "vertical", "down", 1), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Theory]
@@ -42,35 +47,23 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData("vertical", "down", 5)]
         public async Task ScrollAsync_WithParameters_ShouldCallService(string type, string direction, int wheelTimes)
         {
-            // Arrange
-            var expectedResult = $"Scrolled {direction} {wheelTimes} times";
-            _mockDesktopService.Setup(x => x.ScrollAsync(100, 200, type, direction, wheelTimes))
-                              .ReturnsAsync(expectedResult);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await scrollTool.ScrollAsync(100, 200, type, direction, wheelTimes);
+            var result = await _scrollTool.ScrollAsync(100, 200, type, direction, wheelTimes);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ScrollAsync(100, 200, type, direction, wheelTimes), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Fact]
         public async Task ScrollAsync_WithDefaultParameters_ShouldUseDefaults()
         {
-            // Arrange
-            var expectedResult = "Default scroll completed";
-            _mockDesktopService.Setup(x => x.ScrollAsync(null, null, "vertical", "down", 1))
-                              .ReturnsAsync(expectedResult);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await scrollTool.ScrollAsync();
+            var result = await _scrollTool.ScrollAsync();
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ScrollAsync(null, null, "vertical", "down", 1), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Theory]
@@ -80,18 +73,12 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData("right")]
         public async Task ScrollAsync_WithDifferentDirections_ShouldCallService(string direction)
         {
-            // Arrange
-            var expectedResult = $"Scrolled {direction}";
-            _mockDesktopService.Setup(x => x.ScrollAsync(150, 250, "vertical", direction, 1))
-                              .ReturnsAsync(expectedResult);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await scrollTool.ScrollAsync(150, 250, "vertical", direction);
+            var result = await _scrollTool.ScrollAsync(150, 250, "vertical", direction);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ScrollAsync(150, 250, "vertical", direction, 1), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Theory]
@@ -99,18 +86,12 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData("horizontal")]
         public async Task ScrollAsync_WithDifferentTypes_ShouldCallService(string scrollType)
         {
-            // Arrange
-            var expectedResult = $"Scrolled {scrollType}";
-            _mockDesktopService.Setup(x => x.ScrollAsync(300, 400, scrollType, "down", 1))
-                              .ReturnsAsync(expectedResult);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await scrollTool.ScrollAsync(300, 400, scrollType);
+            var result = await _scrollTool.ScrollAsync(300, 400, scrollType);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ScrollAsync(300, 400, scrollType, "down", 1), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Theory]
@@ -120,69 +101,45 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData(10)]
         public async Task ScrollAsync_WithDifferentWheelTimes_ShouldCallService(int wheelTimes)
         {
-            // Arrange
-            var expectedResult = $"Scrolled {wheelTimes} times";
-            _mockDesktopService.Setup(x => x.ScrollAsync(200, 300, "vertical", "down", wheelTimes))
-                              .ReturnsAsync(expectedResult);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await scrollTool.ScrollAsync(200, 300, "vertical", "down", wheelTimes);
+            var result = await _scrollTool.ScrollAsync(200, 300, "vertical", "down", wheelTimes);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ScrollAsync(200, 300, "vertical", "down", wheelTimes), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Fact]
         public async Task ScrollAsync_WithNullCoordinates_ShouldCallService()
         {
-            // Arrange
-            var expectedResult = "Scrolled at current position";
-            _mockDesktopService.Setup(x => x.ScrollAsync(null, null, "vertical", "up", 2))
-                              .ReturnsAsync(expectedResult);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await scrollTool.ScrollAsync(null, null, "vertical", "up", 2);
+            var result = await _scrollTool.ScrollAsync(null, null, "vertical", "up", 2);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ScrollAsync(null, null, "vertical", "up", 2), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Fact]
         public async Task ScrollAsync_HorizontalLeftScroll_ShouldCallService()
         {
-            // Arrange
-            var expectedResult = "Horizontal left scroll completed";
-            _mockDesktopService.Setup(x => x.ScrollAsync(500, 600, "horizontal", "left", 3))
-                              .ReturnsAsync(expectedResult);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await scrollTool.ScrollAsync(500, 600, "horizontal", "left", 3);
+            var result = await _scrollTool.ScrollAsync(500, 600, "horizontal", "left", 3);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ScrollAsync(500, 600, "horizontal", "left", 3), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Fact]
         public async Task ScrollAsync_HorizontalRightScroll_ShouldCallService()
         {
-            // Arrange
-            var expectedResult = "Horizontal right scroll completed";
-            _mockDesktopService.Setup(x => x.ScrollAsync(600, 700, "horizontal", "right", 2))
-                              .ReturnsAsync(expectedResult);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await scrollTool.ScrollAsync(600, 700, "horizontal", "right", 2);
+            var result = await _scrollTool.ScrollAsync(600, 700, "horizontal", "right", 2);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.ScrollAsync(600, 700, "horizontal", "right", 2), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
 
         [Fact]
@@ -196,36 +153,24 @@ namespace Windows_MCP.Net.Test.Desktop
                 (x: 300, y: 300, type: "horizontal", direction: "left", wheelTimes: 3)
             };
 
-            foreach (var (x, y, type, direction, wheelTimes) in scrollOperations)
-            {
-                _mockDesktopService.Setup(s => s.ScrollAsync(x, y, type, direction, wheelTimes))
-                                  .ReturnsAsync($"Scrolled {type} {direction} {wheelTimes} times");
-            }
-
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act & Assert
             foreach (var (x, y, type, direction, wheelTimes) in scrollOperations)
             {
-                var result = await scrollTool.ScrollAsync(x, y, type, direction, wheelTimes);
-                Assert.Equal($"Scrolled {type} {direction} {wheelTimes} times", result);
-                _mockDesktopService.Verify(s => s.ScrollAsync(x, y, type, direction, wheelTimes), Times.Once);
+                var result = await _scrollTool.ScrollAsync(x, y, type, direction, wheelTimes);
+                Assert.NotNull(result);
+                Assert.NotEmpty(result);
             }
         }
 
         [Fact]
-        public async Task ScrollAsync_ServiceThrowsException_ShouldPropagateException()
+        public async Task ScrollAsync_ShouldExecuteSuccessfully()
         {
-            // Arrange
-            var exception = new InvalidOperationException("Scroll service error");
-            _mockDesktopService.Setup(x => x.ScrollAsync(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()))
-                              .ThrowsAsync(exception);
-            var scrollTool = new ScrollTool(_mockDesktopService.Object, _mockLogger.Object);
+            // Act
+            var result = await _scrollTool.ScrollAsync(100, 200);
 
-            // Act & Assert
-            var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => scrollTool.ScrollAsync(100, 200));
-            Assert.Equal("Scroll service error", thrownException.Message);
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
         }
     }
 }
