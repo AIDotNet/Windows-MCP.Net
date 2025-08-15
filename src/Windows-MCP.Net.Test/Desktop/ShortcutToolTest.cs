@@ -91,11 +91,17 @@ namespace Windows_MCP.Net.Test.Desktop
             _mockDesktopService.Verify(x => x.ShortcutAsync(keys), Times.Once);
         }
 
+        public static IEnumerable<object[]> CommonShortcutsData =>
+            new List<object[]>
+            {
+                new object[] { new[] { "Ctrl", "A" } },
+                new object[] { new[] { "Ctrl", "Z" } },
+                new object[] { new[] { "Ctrl", "Y" } },
+                new object[] { new[] { "Ctrl", "S" } }
+            };
+
         [Theory]
-        [InlineData(new[] { "Ctrl", "A" })]
-        [InlineData(new[] { "Ctrl", "Z" })]
-        [InlineData(new[] { "Ctrl", "Y" })]
-        [InlineData(new[] { "Ctrl", "S" })]
+        [MemberData(nameof(CommonShortcutsData))]
         public async Task ShortcutAsync_WithCommonShortcuts_ShouldCallService(string[] keys)
         {
             // Arrange
@@ -112,11 +118,17 @@ namespace Windows_MCP.Net.Test.Desktop
             _mockDesktopService.Verify(x => x.ShortcutAsync(keys), Times.Once);
         }
 
+        public static IEnumerable<object[]> SystemShortcutsData =>
+            new List<object[]>
+            {
+                new object[] { new[] { "Alt", "F4" } },
+                new object[] { new[] { "Win", "L" } },
+                new object[] { new[] { "Win", "R" } },
+                new object[] { new[] { "Ctrl", "Shift", "Esc" } }
+            };
+
         [Theory]
-        [InlineData(new[] { "Alt", "F4" })]
-        [InlineData(new[] { "Win", "L" })]
-        [InlineData(new[] { "Win", "R" })]
-        [InlineData(new[] { "Ctrl", "Shift", "Esc" })]
+        [MemberData(nameof(SystemShortcutsData))]
         public async Task ShortcutAsync_WithSystemShortcuts_ShouldCallService(string[] keys)
         {
             // Arrange
@@ -248,10 +260,16 @@ namespace Windows_MCP.Net.Test.Desktop
             Assert.Equal("Shortcut service error", thrownException.Message);
         }
 
+        public static IEnumerable<object[]> DifferentCasingData =>
+            new List<object[]>
+            {
+                new object[] { new[] { "ctrl", "c" } },
+                new object[] { new[] { "CTRL", "C" } },
+                new object[] { new[] { "Ctrl", "c" } }
+            };
+
         [Theory]
-        [InlineData(new[] { "ctrl", "c" })]
-        [InlineData(new[] { "CTRL", "C" })]
-        [InlineData(new[] { "Ctrl", "c" })]
+        [MemberData(nameof(DifferentCasingData))]
         public async Task ShortcutAsync_WithDifferentCasing_ShouldCallService(string[] keys)
         {
             // Arrange

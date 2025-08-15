@@ -48,13 +48,11 @@ public class FileSystemService : IFileSystemService
                 Directory.CreateDirectory(directory);
             }
 
-            if (File.Exists(path))
-            {
-                return ($"File already exists: {path}", 1);
-            }
-
+            // 写入文件内容（如果文件存在则覆盖）
             await File.WriteAllTextAsync(path, content ?? string.Empty, Encoding.UTF8);
-            _logger.LogInformation("Created file: {Path}", path);
+            
+            var actionWord = File.Exists(path) ? "created" : "created";
+            _logger.LogInformation("Created/Updated file: {Path}", path);
             return ($"Successfully created file: {path}", 0);
         }
         catch (Exception ex)
@@ -347,7 +345,8 @@ public class FileSystemService : IFileSystemService
 
             if (Directory.Exists(path))
             {
-                return ($"Directory already exists: {path}", 1);
+                _logger.LogInformation("Directory already exists: {Path}", path);
+                return ($"Successfully created directory: {path}", 0);
             }
 
             if (createParents)
