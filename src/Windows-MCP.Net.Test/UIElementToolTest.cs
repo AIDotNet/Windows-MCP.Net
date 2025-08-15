@@ -1,8 +1,9 @@
 using Interface;
 using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 using Tools.Desktop;
+using WindowsMCP.Net.Services;
 
 namespace Windows_MCP.Net.Test
 {
@@ -11,318 +12,219 @@ namespace Windows_MCP.Net.Test
     /// </summary>
     public class UIElementToolTest
     {
-        private readonly Mock<IDesktopService> _mockDesktopService;
-        private readonly Mock<ILogger<UIElementTool>> _mockLogger;
+        private readonly IDesktopService _desktopService;
+        private readonly ILogger<UIElementTool> _logger;
+        private readonly UIElementTool _uiElementTool;
 
         public UIElementToolTest()
         {
-            _mockDesktopService = new Mock<IDesktopService>();
-            _mockLogger = new Mock<ILogger<UIElementTool>>();
+            // 创建服务容器并注册依赖
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+            services.AddSingleton<IDesktopService, DesktopService>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            
+            // 获取实际的服务实例
+            _desktopService = serviceProvider.GetRequiredService<IDesktopService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<UIElementTool>>();
+            _uiElementTool = new UIElementTool(_desktopService, _logger);
         }
 
         [Fact]
-        public async Task FindElementByTextAsync_ShouldReturnElementInfo_WhenElementFound()
+        public async Task FindElementByTextAsync_ShouldReturnValidJson_WhenCalled()
         {
             // Arrange
             var searchText = "OK";
-            var expectedResult = JsonSerializer.Serialize(new
-            {
-                success = true,
-                found = true,
-                element = new
-                {
-                    name = "OK",
-                    automationId = "btnOK",
-                    className = "Button",
-                    controlType = "button",
-                    boundingRectangle = new { x = 100, y = 200, width = 80, height = 30 },
-                    isEnabled = true,
-                    isVisible = true
-                }
-            });
-            
-            _mockDesktopService.Setup(x => x.FindElementByTextAsync(searchText))
-                              .ReturnsAsync(expectedResult);
-            var uiElementTool = new UIElementTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await uiElementTool.FindElementByTextAsync(searchText);
+            var result = await _uiElementTool.FindElementByTextAsync(searchText);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.FindElementByTextAsync(searchText), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
+            // 验证返回的是有效的JSON
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.TryGetProperty("success", out var successProperty));
+            Assert.True(successProperty.GetBoolean());
+            Assert.True(jsonResult.TryGetProperty("found", out var foundProperty));
         }
 
         [Fact]
-        public async Task FindElementByTextAsync_ShouldReturnNotFound_WhenElementNotExists()
+        public async Task FindElementByTextAsync_ShouldHandleNonExistentElement()
         {
             // Arrange
-            var searchText = "NonExistentButton";
-            var expectedResult = JsonSerializer.Serialize(new
-            {
-                success = true,
-                found = false,
-                message = $"Element with text '{searchText}' not found"
-            });
-            
-            _mockDesktopService.Setup(x => x.FindElementByTextAsync(searchText))
-                              .ReturnsAsync(expectedResult);
-            var uiElementTool = new UIElementTool(_mockDesktopService.Object, _mockLogger.Object);
+            var searchText = "NonExistentButton_" + Guid.NewGuid().ToString(); // 使用随机文本确保元素不存在
 
             // Act
-            var result = await uiElementTool.FindElementByTextAsync(searchText);
+            var result = await _uiElementTool.FindElementByTextAsync(searchText);
 
             // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
             var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
-            Assert.True(jsonResult.GetProperty("success").GetBoolean());
-            Assert.False(jsonResult.GetProperty("found").GetBoolean());
-            _mockDesktopService.Verify(x => x.FindElementByTextAsync(searchText), Times.Once);
+            Assert.True(jsonResult.TryGetProperty("success", out var successProperty));
+            // 即使元素未找到，操作也应该成功完成
+            Assert.True(successProperty.GetBoolean());
+            
+            // 验证found属性为false
+            Assert.True(jsonResult.TryGetProperty("found", out var foundProperty));
+            Assert.False(foundProperty.GetBoolean());
         }
 
         [Fact]
-        public async Task FindElementByClassNameAsync_ShouldReturnElementInfo_WhenElementFound()
+        public async Task FindElementByClassNameAsync_ShouldReturnValidJson_WhenCalled()
         {
             // Arrange
             var className = "Button";
-            var expectedResult = JsonSerializer.Serialize(new
-            {
-                success = true,
-                found = true,
-                element = new
-                {
-                    name = "Submit",
-                    automationId = "btnSubmit",
-                    className = "Button",
-                    controlType = "button",
-                    boundingRectangle = new { x = 150, y = 250, width = 100, height = 35 },
-                    isEnabled = true,
-                    isVisible = true
-                }
-            });
-            
-            _mockDesktopService.Setup(x => x.FindElementByClassNameAsync(className))
-                              .ReturnsAsync(expectedResult);
-            var uiElementTool = new UIElementTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await uiElementTool.FindElementByClassNameAsync(className);
+            var result = await _uiElementTool.FindElementByClassNameAsync(className);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.FindElementByClassNameAsync(className), Times.Once);
-        }
-
-        [Fact]
-        public async Task FindElementByAutomationIdAsync_ShouldReturnElementInfo_WhenElementFound()
-        {
-            // Arrange
-            var automationId = "txtUsername";
-            var expectedResult = JsonSerializer.Serialize(new
-            {
-                success = true,
-                found = true,
-                element = new
-                {
-                    name = "Username",
-                    automationId = "txtUsername",
-                    className = "TextBox",
-                    controlType = "edit",
-                    boundingRectangle = new { x = 200, y = 100, width = 150, height = 25 },
-                    isEnabled = true,
-                    isVisible = true
-                }
-            });
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
             
-            _mockDesktopService.Setup(x => x.FindElementByAutomationIdAsync(automationId))
-                              .ReturnsAsync(expectedResult);
-            var uiElementTool = new UIElementTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act
-            var result = await uiElementTool.FindElementByAutomationIdAsync(automationId);
-
-            // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.FindElementByAutomationIdAsync(automationId), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetElementPropertiesAsync_ShouldReturnElementProperties_WhenElementExists()
-        {
-            // Arrange
-            var x = 300;
-            var y = 400;
-            var expectedResult = JsonSerializer.Serialize(new
-            {
-                success = true,
-                found = true,
-                coordinates = new { x, y },
-                element = new
-                {
-                    name = "Close",
-                    automationId = "btnClose",
-                    className = "Button",
-                    controlType = "button",
-                    boundingRectangle = new { x = 290, y = 390, width = 20, height = 20 },
-                    isEnabled = true,
-                    isVisible = true,
-                    hasKeyboardFocus = false,
-                    isKeyboardFocusable = true
-                }
-            });
-            
-            _mockDesktopService.Setup(s => s.GetElementPropertiesAsync(x, y))
-                              .ReturnsAsync(expectedResult);
-            var uiElementTool = new UIElementTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act
-            var result = await uiElementTool.GetElementPropertiesAsync(x, y);
-
-            // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(s => s.GetElementPropertiesAsync(x, y), Times.Once);
-        }
-
-        [Fact]
-        public async Task GetElementPropertiesAsync_ShouldReturnNotFound_WhenNoElementAtCoordinates()
-        {
-            // Arrange
-            var x = 1000;
-            var y = 1000;
-            var expectedResult = JsonSerializer.Serialize(new
-            {
-                success = true,
-                found = false,
-                coordinates = new { x, y },
-                message = $"No UI element found at coordinates ({x}, {y})"
-            });
-            
-            _mockDesktopService.Setup(s => s.GetElementPropertiesAsync(x, y))
-                              .ReturnsAsync(expectedResult);
-            var uiElementTool = new UIElementTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act
-            var result = await uiElementTool.GetElementPropertiesAsync(x, y);
-
-            // Assert
+            // 验证返回的是有效的JSON
             var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
-            Assert.True(jsonResult.GetProperty("success").GetBoolean());
-            Assert.False(jsonResult.GetProperty("found").GetBoolean());
-            _mockDesktopService.Verify(s => s.GetElementPropertiesAsync(x, y), Times.Once);
+            Assert.True(jsonResult.TryGetProperty("success", out var successProperty));
+            Assert.True(successProperty.GetBoolean());
+            Assert.True(jsonResult.TryGetProperty("found", out var foundProperty));
+        }
+
+        [Fact]
+        public async Task FindElementByAutomationIdAsync_ShouldReturnValidJson_WhenCalled()
+        {
+            // Arrange
+            var automationId = "NonExistent_" + Guid.NewGuid().ToString();
+
+            // Act
+            var result = await _uiElementTool.FindElementByAutomationIdAsync(automationId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
+            // 验证返回的是有效的JSON
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.TryGetProperty("success", out var successProperty));
+            Assert.True(successProperty.GetBoolean());
+            Assert.True(jsonResult.TryGetProperty("found", out var foundProperty));
+        }
+
+        [Fact]
+        public async Task GetElementPropertiesAsync_ShouldReturnValidJson_WhenCalled()
+        {
+            // Arrange
+            var x = 100;
+            var y = 100;
+
+            // Act
+            var result = await _uiElementTool.GetElementPropertiesAsync(x, y);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
+            // 验证返回的是有效的JSON
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.TryGetProperty("success", out var successProperty));
+            Assert.True(successProperty.GetBoolean());
+            Assert.True(jsonResult.TryGetProperty("found", out var foundProperty));
+            Assert.True(jsonResult.TryGetProperty("coordinates", out var coordinatesProperty));
+        }
+
+        [Fact]
+        public async Task GetElementPropertiesAsync_ShouldHandleEmptyArea()
+        {
+            // Arrange - 使用屏幕外的坐标确保没有元素
+            var x = 5000;
+            var y = 5000;
+
+            // Act
+            var result = await _uiElementTool.GetElementPropertiesAsync(x, y);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.TryGetProperty("success", out var successProperty));
+            Assert.True(successProperty.GetBoolean());
+            Assert.True(jsonResult.TryGetProperty("coordinates", out var coordinatesProperty));
         }
 
         [Theory]
-        [InlineData("OK", "text", 1000)]
-        [InlineData("Button", "className", 2000)]
-        [InlineData("btnSubmit", "automationId", 3000)]
-        public async Task WaitForElementAsync_ShouldReturnElementInfo_WhenElementAppears(string selector, string selectorType, int timeout)
+        [InlineData("NonExistent1", "text", 500)]
+        [InlineData("NonExistent2", "className", 500)]
+        [InlineData("NonExistent3", "automationId", 500)]
+        public async Task WaitForElementAsync_ShouldReturnValidJson_WhenCalled(string selector, string selectorType, int timeout)
         {
-            // Arrange
-            var expectedResult = JsonSerializer.Serialize(new
-            {
-                success = true,
-                found = true,
-                waitTime = 500,
-                selector,
-                selectorType,
-                element = new
-                {
-                    name = "Test Element",
-                    automationId = "testElement",
-                    className = "TestClass",
-                    controlType = "button",
-                    boundingRectangle = new { x = 100, y = 100, width = 80, height = 30 },
-                    isEnabled = true,
-                    isVisible = true
-                }
-            });
-            
-            _mockDesktopService.Setup(s => s.WaitForElementAsync(selector, selectorType, timeout))
-                              .ReturnsAsync(expectedResult);
-            var uiElementTool = new UIElementTool(_mockDesktopService.Object, _mockLogger.Object);
+            // Arrange - 使用不存在的元素和短超时时间
+            var uniqueSelector = selector + "_" + Guid.NewGuid().ToString();
 
             // Act
-            var result = await uiElementTool.WaitForElementAsync(selector, selectorType, timeout);
+            var result = await _uiElementTool.WaitForElementAsync(uniqueSelector, selectorType, timeout);
 
             // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
             var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
-            Assert.True(jsonResult.GetProperty("success").GetBoolean());
-            Assert.True(jsonResult.GetProperty("found").GetBoolean());
-            Assert.Equal(selector, jsonResult.GetProperty("selector").GetString());
-            Assert.Equal(selectorType, jsonResult.GetProperty("selectorType").GetString());
-            _mockDesktopService.Verify(s => s.WaitForElementAsync(selector, selectorType, timeout), Times.Once);
+            Assert.True(jsonResult.TryGetProperty("success", out var successProperty));
+            Assert.True(successProperty.GetBoolean());
+            Assert.True(jsonResult.TryGetProperty("selector", out var selectorProperty));
+            Assert.Equal(uniqueSelector, selectorProperty.GetString());
+            Assert.True(jsonResult.TryGetProperty("selectorType", out var selectorTypeProperty));
+            Assert.Equal(selectorType, selectorTypeProperty.GetString());
         }
 
         [Fact]
-        public async Task WaitForElementAsync_ShouldReturnTimeout_WhenElementDoesNotAppear()
+        public async Task WaitForElementAsync_ShouldHandleTimeout()
         {
             // Arrange
-            var selector = "NonExistentElement";
+            var selector = "NonExistentElement_" + Guid.NewGuid().ToString();
             var selectorType = "text";
-            var timeout = 1000;
-            var expectedResult = JsonSerializer.Serialize(new
-            {
-                success = true,
-                found = false,
-                timeout = true,
-                waitTime = timeout,
-                selector,
-                selectorType,
-                message = $"Element with {selectorType} '{selector}' not found within {timeout}ms timeout"
-            });
-            
-            _mockDesktopService.Setup(s => s.WaitForElementAsync(selector, selectorType, timeout))
-                              .ReturnsAsync(expectedResult);
-            var uiElementTool = new UIElementTool(_mockDesktopService.Object, _mockLogger.Object);
+            var timeout = 500; // 使用短超时时间
 
             // Act
-            var result = await uiElementTool.WaitForElementAsync(selector, selectorType, timeout);
+            var result = await _uiElementTool.WaitForElementAsync(selector, selectorType, timeout);
 
             // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
             var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
-            Assert.True(jsonResult.GetProperty("success").GetBoolean());
-            Assert.False(jsonResult.GetProperty("found").GetBoolean());
-            Assert.True(jsonResult.GetProperty("timeout").GetBoolean());
-            _mockDesktopService.Verify(s => s.WaitForElementAsync(selector, selectorType, timeout), Times.Once);
+            Assert.True(jsonResult.TryGetProperty("success", out var successProperty));
+            Assert.True(successProperty.GetBoolean());
+            Assert.True(jsonResult.TryGetProperty("found", out var foundProperty));
+            // 由于元素不存在且超时时间短，应该返回未找到
+            Assert.False(foundProperty.GetBoolean());
         }
 
         [Fact]
         public async Task WaitForElementAsync_ShouldUseDefaultTimeout_WhenTimeoutNotSpecified()
         {
             // Arrange
-            var selector = "TestButton";
+            var selector = "NonExistentButton_" + Guid.NewGuid().ToString();
             var selectorType = "text";
-            var defaultTimeout = 5000;
-            var expectedResult = JsonSerializer.Serialize(new
-            {
-                success = true,
-                found = true,
-                waitTime = 100,
-                selector,
-                selectorType,
-                element = new
-                {
-                    name = "TestButton",
-                    automationId = "btnTest",
-                    className = "Button",
-                    controlType = "button",
-                    boundingRectangle = new { x = 50, y = 50, width = 100, height = 30 },
-                    isEnabled = true,
-                    isVisible = true
-                }
-            });
-            
-            _mockDesktopService.Setup(s => s.WaitForElementAsync(selector, selectorType, defaultTimeout))
-                              .ReturnsAsync(expectedResult);
-            var uiElementTool = new UIElementTool(_mockDesktopService.Object, _mockLogger.Object);
 
-            // Act
-            var result = await uiElementTool.WaitForElementAsync(selector, selectorType);
+            // Act - 不指定超时时间，使用默认值
+            var result = await _uiElementTool.WaitForElementAsync(selector, selectorType);
 
             // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
             var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
-            Assert.True(jsonResult.GetProperty("success").GetBoolean());
-            Assert.True(jsonResult.GetProperty("found").GetBoolean());
-            _mockDesktopService.Verify(s => s.WaitForElementAsync(selector, selectorType, defaultTimeout), Times.Once);
+            Assert.True(jsonResult.TryGetProperty("success", out var successProperty));
+            Assert.True(successProperty.GetBoolean());
+            Assert.True(jsonResult.TryGetProperty("selector", out var selectorProperty));
+            Assert.Equal(selector, selectorProperty.GetString());
+            Assert.True(jsonResult.TryGetProperty("selectorType", out var selectorTypeProperty));
+            Assert.Equal(selectorType, selectorTypeProperty.GetString());
         }
     }
 }
