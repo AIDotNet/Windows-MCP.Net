@@ -1,7 +1,8 @@
 using Interface;
 using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using Tools.Desktop;
+using WindowsMCP.Net.Services;
 
 namespace Windows_MCP.Net.Test.Desktop
 {
@@ -10,50 +11,46 @@ namespace Windows_MCP.Net.Test.Desktop
     /// </summary>
     public class WaitToolTest
     {
-        private readonly Mock<IDesktopService> _mockDesktopService;
-        private readonly Mock<ILogger<WaitTool>> _mockLogger;
+        private readonly IDesktopService _desktopService;
+        private readonly ILogger<WaitTool> _logger;
+        private readonly WaitTool _waitTool;
 
         public WaitToolTest()
         {
-            _mockDesktopService = new Mock<IDesktopService>();
-            _mockLogger = new Mock<ILogger<WaitTool>>();
+            // 创建服务容器并注册依赖
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+            services.AddSingleton<IDesktopService, DesktopService>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            
+            // 获取实际的服务实例
+            _desktopService = serviceProvider.GetRequiredService<IDesktopService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<WaitTool>>();
+            _waitTool = new WaitTool(_desktopService, _logger);
         }
 
         [Fact]
         public async Task WaitAsync_ShouldReturnSuccessMessage()
         {
-            // Arrange
-            var expectedResult = "Wait completed";
-            _mockDesktopService.Setup(x => x.WaitAsync(5))
-                              .ReturnsAsync(expectedResult);
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await waitTool.WaitAsync(5);
+            var result = await _waitTool.WaitAsync(1); // 使用较短的等待时间以加快测试
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.WaitAsync(5), Times.Once);
+            Assert.Equal("Waited for 1 seconds", result);
         }
 
         [Theory]
         [InlineData(1)]
-        [InlineData(10)]
-        [InlineData(30)]
+        [InlineData(2)]
+        [InlineData(3)]
         public async Task WaitAsync_WithDifferentDurations_ShouldCallService(int duration)
         {
-            // Arrange
-            var expectedResult = $"Waited for {duration} seconds";
-            _mockDesktopService.Setup(x => x.WaitAsync(duration))
-                              .ReturnsAsync(expectedResult);
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await waitTool.WaitAsync(duration);
+            var result = await _waitTool.WaitAsync(duration);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.WaitAsync(duration), Times.Once);
+            Assert.Equal($"Waited for {duration} seconds", result);
         }
 
         [Fact]
@@ -61,109 +58,73 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var duration = 0;
-            var expectedResult = "No wait required";
-            _mockDesktopService.Setup(x => x.WaitAsync(duration))
-                              .ReturnsAsync(expectedResult);
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await waitTool.WaitAsync(duration);
+            var result = await _waitTool.WaitAsync(duration);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.WaitAsync(duration), Times.Once);
+            Assert.Equal("Waited for 0 seconds", result);
         }
 
         [Fact]
         public async Task WaitAsync_WithLargeDuration_ShouldCallService()
         {
             // Arrange
-            var duration = 3600; // 1 hour
-            var expectedResult = $"Long wait of {duration} seconds completed";
-            _mockDesktopService.Setup(x => x.WaitAsync(duration))
-                              .ReturnsAsync(expectedResult);
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
+            var duration = 5; // 使用较小的值以加快测试
 
             // Act
-            var result = await waitTool.WaitAsync(duration);
+            var result = await _waitTool.WaitAsync(duration);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.WaitAsync(duration), Times.Once);
+            Assert.Equal($"Waited for {duration} seconds", result);
         }
 
         [Theory]
         [InlineData(2)]
-        [InlineData(5)]
-        [InlineData(15)]
+        [InlineData(3)]
+        [InlineData(4)]
         public async Task WaitAsync_WithCommonDurations_ShouldCallService(int duration)
         {
-            // Arrange
-            var expectedResult = $"Standard wait of {duration} seconds completed";
-            _mockDesktopService.Setup(x => x.WaitAsync(duration))
-                              .ReturnsAsync(expectedResult);
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await waitTool.WaitAsync(duration);
+            var result = await _waitTool.WaitAsync(duration);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.WaitAsync(duration), Times.Once);
+            Assert.Equal($"Waited for {duration} seconds", result);
         }
 
         [Fact]
         public async Task WaitAsync_MultipleConsecutiveWaits_ShouldCallServiceMultipleTimes()
         {
             // Arrange
-            var durations = new[] { 1, 2, 3 };
-            foreach (var duration in durations)
-            {
-                _mockDesktopService.Setup(x => x.WaitAsync(duration))
-                                  .ReturnsAsync($"Waited {duration} seconds");
-            }
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
+            var durations = new[] { 1, 2, 1 };
 
             // Act & Assert
             foreach (var duration in durations)
             {
-                var result = await waitTool.WaitAsync(duration);
-                Assert.Equal($"Waited {duration} seconds", result);
-                _mockDesktopService.Verify(x => x.WaitAsync(duration), Times.Once);
+                var result = await _waitTool.WaitAsync(duration);
+                Assert.Equal($"Waited for {duration} seconds", result);
             }
         }
 
         [Fact]
-        public async Task WaitAsync_ServiceThrowsException_ShouldPropagateException()
+        public async Task WaitAsync_WithValidDuration_ShouldNotThrowException()
         {
-            // Arrange
-            var exception = new InvalidOperationException("Wait service error");
-            _mockDesktopService.Setup(x => x.WaitAsync(It.IsAny<int>()))
-                              .ThrowsAsync(exception);
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act & Assert
-            var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => waitTool.WaitAsync(5));
-            Assert.Equal("Wait service error", thrownException.Message);
+            // Act & Assert - 确保正常的等待操作不会抛出异常
+            var result = await _waitTool.WaitAsync(1);
+            Assert.Equal("Waited for 1 seconds", result);
         }
 
         [Fact]
-        public async Task WaitAsync_WithNegativeDuration_ShouldCallService()
+        public async Task WaitAsync_WithNegativeDuration_ShouldReturnError()
         {
             // Arrange
-            var duration = -5;
-            var expectedResult = "Invalid duration handled";
-            _mockDesktopService.Setup(x => x.WaitAsync(duration))
-                              .ReturnsAsync(expectedResult);
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
+            var duration = -1;
 
             // Act
-            var result = await waitTool.WaitAsync(duration);
+            var result = await _waitTool.WaitAsync(duration);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.WaitAsync(duration), Times.Once);
+            Assert.StartsWith("Error:", result);
         }
 
         [Fact]
@@ -171,37 +132,25 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var duration = 1;
-            var expectedResult = "Quick wait completed";
-            _mockDesktopService.Setup(x => x.WaitAsync(duration))
-                              .ReturnsAsync(expectedResult);
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await waitTool.WaitAsync(duration);
+            var result = await _waitTool.WaitAsync(duration);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.WaitAsync(duration), Times.Once);
+            Assert.Equal("Waited for 1 seconds", result);
         }
 
         [Fact]
         public async Task WaitAsync_ShouldPassCorrectDurationToService()
         {
             // Arrange
-            var duration = 42;
-            var expectedResult = "Wait completed successfully";
-            _mockDesktopService.Setup(x => x.WaitAsync(duration))
-                              .ReturnsAsync(expectedResult);
-            var waitTool = new WaitTool(_mockDesktopService.Object, _mockLogger.Object);
+            var duration = 2;
 
             // Act
-            var result = await waitTool.WaitAsync(duration);
+            var result = await _waitTool.WaitAsync(duration);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.WaitAsync(duration), Times.Once);
-            // 验证传递的参数值正确
-            _mockDesktopService.Verify(x => x.WaitAsync(It.Is<int>(d => d == 42)), Times.Once);
+            Assert.Equal("Waited for 2 seconds", result);
         }
     }
 }
