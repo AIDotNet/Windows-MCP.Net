@@ -122,7 +122,7 @@ dotnet run
 ### NuGet 包安装
 
 ```bash
-dotnet tool install --global Windows-MCP.Net
+dotnet tool install --global WindowsMCP.Net
 ```
 
 ## 🚀 使用方法
