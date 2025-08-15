@@ -395,45 +395,55 @@ public class DesktopService : IDesktopService
                 { "资源管理器", new[] { "explorer.exe", "explorer", "资源管理器" } }
             };
 
+            // 创建超时控制
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            
             // 尝试多种启动方式
-            var launchMethods = new List<Func<Task<(string Response, int Status)>>>();
+            var launchMethods = new List<Func<CancellationToken, Task<(string Response, int Status)>>>();
             
             // 方法1: 如果有映射，尝试直接启动可执行文件
             if (appMappings.TryGetValue(name, out var mappings))
             {
                 var exeName = mappings[0]; // 第一个是可执行文件名
-                launchMethods.Add(() => TryLaunchDirectly(exeName, name));
+                launchMethods.Add((ct) => TryLaunchDirectly(exeName, name, ct));
             }
             
             // 方法2: 尝试使用start命令启动
-            launchMethods.Add(() => TryLaunchWithStart(name));
+            launchMethods.Add((ct) => TryLaunchWithStart(name, ct));
             
             // 方法3: 如果有映射，尝试其他名称
             if (appMappings.TryGetValue(name, out mappings))
             {
                 foreach (var altName in mappings.Skip(1))
                 {
-                    launchMethods.Add(() => TryLaunchWithStart(altName));
+                    launchMethods.Add((ct) => TryLaunchWithStart(altName, ct));
                 }
             }
 
             // 依次尝试各种启动方法
             foreach (var method in launchMethods)
             {
-                var result = await method();
-                if (result.Status == 0)
+                try
                 {
-                    // 等待应用启动完成
-                    await Task.Delay(2000);
-                    
-                    // 尝试找到新启动的窗口并获取坐标
-                    var windowInfo = GetLaunchedWindowInfo(name);
-                    if (!string.IsNullOrEmpty(windowInfo))
+                    var result = await method(cts.Token).WaitAsync(cts.Token);
+                    if (result.Status == 0)
                     {
-                        return ($"Successfully launched {name}. {windowInfo}", 0);
+                        // 等待应用启动完成，但限制时间
+                        await Task.Delay(1000, cts.Token);
+                        
+                        // 尝试找到新启动的窗口并获取坐标
+                        var windowInfo = GetLaunchedWindowInfo(name);
+                        if (!string.IsNullOrEmpty(windowInfo))
+                        {
+                            return ($"Successfully launched {name}. {windowInfo}", 0);
+                        }
+                        
+                        return ($"Successfully launched {name}", 0);
                     }
-                    
-                    return ($"Successfully launched {name}", 0);
+                }
+                catch (OperationCanceledException)
+                {
+                    return ($"Failed to launch {name}: Operation timed out", 1);
                 }
             }
             
@@ -449,67 +459,102 @@ public class DesktopService : IDesktopService
     /// <summary>
     /// 尝试直接启动可执行文件
     /// </summary>
-    private async Task<(string Response, int Status)> TryLaunchDirectly(string exeName, string displayName)
+    private async Task<(string Response, int Status)> TryLaunchDirectly(string exeName, string displayName, CancellationToken cancellationToken = default)
     {
         try
         {
+            // 对于系统程序，使用cmd /c启动以避免弹窗
             var startInfo = new ProcessStartInfo
             {
-                FileName = exeName,
-                UseShellExecute = true,
-                CreateNoWindow = false
+                FileName = "cmd.exe",
+                Arguments = $"/c \"{exeName}\" >nul 2>&1",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                WindowStyle = ProcessWindowStyle.Hidden
             };
 
             using var process = Process.Start(startInfo);
             if (process != null)
             {
-                return ($"Successfully launched {displayName} directly", 0);
+                // 不等待进程退出，因为GUI应用会继续运行，但添加超时控制
+                await Task.Delay(1000, cancellationToken); // 给应用启动时间
+                
+                // 检查进程是否还在运行或已经启动了目标应用
+                if (!process.HasExited || process.ExitCode == 0)
+                {
+                    return ($"Successfully launched {displayName} directly", 0);
+                }
+                else
+                {
+                    return ($"Failed to launch {displayName} directly", 1);
+                }
             }
             return ($"Failed to launch {displayName} directly", 1);
         }
-        catch
+        catch (OperationCanceledException)
         {
-            return ($"Failed to launch {displayName} directly", 1);
+            return ($"Failed to launch {displayName} directly: Operation timed out", 1);
+        }
+        catch (Exception ex)
+        {
+            return ($"Failed to launch {displayName} directly: {ex.Message}", 1);
         }
     }
     
     /// <summary>
     /// 尝试使用start命令启动应用
     /// </summary>
-    private async Task<(string Response, int Status)> TryLaunchWithStart(string name)
+    private async Task<(string Response, int Status)> TryLaunchWithStart(string name, CancellationToken cancellationToken = default)
     {
         try
         {
             var startInfo = new ProcessStartInfo
             {
                 FileName = "cmd.exe",
-                Arguments = $"/c start \"\" \"{name}\"",
+                Arguments = $"/c start \"\" \"{name}\" 2>nul",
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardError = true,
-                RedirectStandardOutput = true
+                RedirectStandardOutput = true,
+                WindowStyle = ProcessWindowStyle.Hidden
             };
 
             using var process = Process.Start(startInfo);
             if (process != null)
             {
-                await process.WaitForExitAsync();
+                // 不等待进程退出，因为start命令会立即返回，但添加短暂延迟检查
+                await Task.Delay(1000, cancellationToken);
                 
-                if (process.ExitCode == 0)
+                // 检查进程是否已经退出
+                if (process.HasExited)
                 {
-                    return ($"Successfully launched {name} with start command", 0);
+                    if (process.ExitCode == 0)
+                    {
+                        return ($"Successfully launched {name} with start command", 0);
+                    }
+                    else
+                    {
+                        return ($"Failed to launch {name} with start command: Exit code {process.ExitCode}", 1);
+                    }
                 }
                 else
                 {
-                    var errorOutput = await process.StandardError.ReadToEndAsync();
-                    return ($"Failed to launch {name} with start command: {errorOutput}", 1);
+                    // 进程还在运行，可能是在等待，强制终止并返回失败
+                    try { process.Kill(); } catch { }
+                    return ($"Failed to launch {name} with start command: Process did not exit", 1);
                 }
             }
             return ($"Failed to launch {name} with start command", 1);
         }
-        catch
+        catch (OperationCanceledException)
         {
-            return ($"Failed to launch {name} with start command", 1);
+            return ($"Failed to launch {name} with start command: Operation timed out", 1);
+        }
+        catch (Exception ex)
+        {
+            return ($"Failed to launch {name} with start command: {ex.Message}", 1);
         }
     }
 
