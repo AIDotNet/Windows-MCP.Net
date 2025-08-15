@@ -170,6 +170,7 @@ dotnet run --project src/Windows-MCP.Net.csproj
 | **ExtractTextFromRegionTool** | 使用OCR从屏幕指定区域提取文字 |
 | **FindTextOnScreenTool** | 使用OCR在屏幕上查找指定文字 |
 | **GetTextCoordinatesTool** | 获取屏幕上文字的坐标位置 |
+| **ExtractTextFromFileTool** | 使用OCR从图像文件中提取文字 |
 
 ## UI元素识别工具
 
