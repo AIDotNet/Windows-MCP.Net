@@ -92,13 +92,32 @@ public class OcrService : IOcrService, IDisposable
                     {
                         try
                         {
+                            _logger.LogInformation("Initializing OCR model...");
+                            
+                            // 诊断信息：检查OpenCV是否可用
+                            try
+                            {
+                                var version = Cv2.GetVersionString();
+                                _logger.LogInformation("OpenCV version: {Version}", version);
+                            }
+                            catch (Exception cvEx)
+                            {
+                                _logger.LogError(cvEx, "Failed to get OpenCV version - native libraries may not be loaded correctly");
+                                throw new InvalidOperationException("OpenCV native libraries are not available. This may be due to missing runtime dependencies in the dnx environment.", cvEx);
+                            }
+                            
+                            // 诊断信息：检查运行时环境
+                            var runtimeInfo = System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier;
+                            var architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture;
+                            _logger.LogInformation("Runtime: {Runtime}, Architecture: {Architecture}", runtimeInfo, architecture);
+                            
                             _logger.LogInformation("Downloading OCR model...");
                             _model = OnlineFullModels.ChineseV4.DownloadAsync().Result;
-                            _logger.LogInformation("OCR model downloaded successfully");
+                            _logger.LogInformation("OCR model downloaded and initialized successfully");
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Failed to download OCR model");
+                            _logger.LogError(ex, "Failed to initialize OCR model. Error: {Message}", ex.Message);
                             throw;
                         }
                     }
