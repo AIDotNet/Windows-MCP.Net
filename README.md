@@ -26,27 +26,7 @@
 
 **重要提示**: 本项目需要 .NET 10 才能运行，请先确保你的本地安装了 .NET 10。如果尚未安装，请访问 [.NET 10 下载页面](https://dotnet.microsoft.com/zh-cn/download/dotnet/10.0) 进行下载和安装。
 
-### 1. 安装和运行
-
-#### 方式一：全局安装（推荐）
-```bash
-dotnet tool install --global WindowsMCP.Net
-```
-
-#### 方式二：从源码运行
-```bash
-# 克隆仓库
-git clone https://github.com/AIDotNet/Windows-MCP.Net.git
-cd Windows-MCP.Net
-
-# 构建项目
-dotnet build
-
-# 运行项目
-dotnet run --project src/Windows-MCP.Net.csproj
-```
-
-### 2. MCP 客户端配置
+### 1. MCP 客户端配置
 
 在您的 MCP 客户端配置中添加以下配置：
 
