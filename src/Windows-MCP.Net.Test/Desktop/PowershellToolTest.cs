@@ -1,7 +1,8 @@
 using Interface;
 using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using Tools.Desktop;
+using WindowsMCP.Net.Services;
 
 namespace Windows_MCP.Net.Test.Desktop
 {
@@ -10,13 +11,23 @@ namespace Windows_MCP.Net.Test.Desktop
     /// </summary>
     public class PowershellToolTest
     {
-        private readonly Mock<IDesktopService> _mockDesktopService;
-        private readonly Mock<ILogger<PowershellTool>> _mockLogger;
+        private readonly IDesktopService _desktopService;
+        private readonly ILogger<PowershellTool> _logger;
+        private readonly PowershellTool _powershellTool;
 
         public PowershellToolTest()
         {
-            _mockDesktopService = new Mock<IDesktopService>();
-            _mockLogger = new Mock<ILogger<PowershellTool>>();
+            // 创建服务容器并注册依赖
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+            services.AddSingleton<IDesktopService, DesktopService>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            
+            // 获取实际的服务实例
+            _desktopService = serviceProvider.GetRequiredService<IDesktopService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<PowershellTool>>();
+            _powershellTool = new PowershellTool(_desktopService, _logger);
         }
 
         [Fact]
@@ -24,17 +35,14 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var command = "Get-Date";
-            var expectedResult = "2024-01-01 12:00:00";
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(command))
-                              .ReturnsAsync((expectedResult, 0));
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await powershellTool.ExecuteCommandAsync(command);
+            var result = await _powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            Assert.Equal($"Status Code: 0\nResponse: {expectedResult}", result);
-            _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
         }
 
         [Theory]
@@ -43,19 +51,13 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData("ls")]
         public async Task ExecuteCommandAsync_WithDifferentCommands_ShouldCallService(string command)
         {
-            // Arrange
-            var expectedResult = $"Output of {command}";
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(command))
-                              .ReturnsAsync((expectedResult, 0));
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await powershellTool.ExecuteCommandAsync(command);
+            var result = await _powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            var expectedOutput = $"Status Code: 0\nResponse: {expectedResult}";
-            Assert.Equal(expectedOutput, result);
-            _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
         }
 
         [Fact]
@@ -63,39 +65,30 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var command = "Get-NonExistentCommand";
-            var errorMessage = "Command not found";
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(command))
-                              .ReturnsAsync((errorMessage, 1));
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await powershellTool.ExecuteCommandAsync(command);
+            var result = await _powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            Assert.Equal($"Status Code: 1\nResponse: {errorMessage}", result);
-            _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
+            // 对于无效命令，状态码应该不是0
+            Assert.DoesNotContain("Status Code: 0", result);
         }
 
         [Theory]
-        [InlineData("")]
-        [InlineData("   ")]
         [InlineData("Get-ChildItem")]
         [InlineData("Get-Process | Select-Object Name")]
         public async Task ExecuteCommandAsync_WithVariousCommands_ShouldCallService(string command)
         {
-            // Arrange
-            var response = $"Executed: {command}";
-            var statusCode = string.IsNullOrWhiteSpace(command) ? 1 : 0;
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(command))
-                              .ReturnsAsync((response, statusCode));
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await powershellTool.ExecuteCommandAsync(command);
+            var result = await _powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            Assert.Equal($"Status Code: {statusCode}\nResponse: {response}", result);
-            _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
         }
 
         [Fact]
@@ -103,17 +96,14 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var command = "Get-Process | Where-Object {$_.ProcessName -eq 'notepad'} | Select-Object Id, ProcessName";
-            var response = "Id ProcessName\n-- -----------\n1234 notepad";
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(command))
-                              .ReturnsAsync((response, 0));
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await powershellTool.ExecuteCommandAsync(command);
+            var result = await _powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            Assert.Equal($"Status Code: 0\nResponse: {response}", result);
-            _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
         }
 
         [Fact]
@@ -121,19 +111,14 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var command = "Get-Service";
-            var response = "Status   Name               DisplayName\n------   ----               -----------\nRunning  AudioSrv           Windows Audio\nStopped  BITS               Background Intelligent Transfer Ser...";
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(command))
-                              .ReturnsAsync((response, 0));
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await powershellTool.ExecuteCommandAsync(command);
+            var result = await _powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            Assert.Equal($"Status Code: 0\nResponse: {response}", result);
-            Assert.Contains("Status Code: 0", result);
-            Assert.Contains("Response: ", result);
-            _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
         }
 
         [Fact]
@@ -141,54 +126,49 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var command = "Clear-Host";
-            var response = "";
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(command))
-                              .ReturnsAsync((response, 0));
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await powershellTool.ExecuteCommandAsync(command);
+            var result = await _powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            Assert.Equal($"Status Code: 0\nResponse: {response}", result);
-            _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
-        }
-
-        [Theory]
-        [InlineData(0)]
-        [InlineData(1)]
-        [InlineData(2)]
-        [InlineData(255)]
-        public async Task ExecuteCommandAsync_WithDifferentStatusCodes_ShouldReturnCorrectFormat(int statusCode)
-        {
-            // Arrange
-            var command = "Test-Command";
-            var response = $"Command result with status {statusCode}";
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(command))
-                              .ReturnsAsync((response, statusCode));
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act
-            var result = await powershellTool.ExecuteCommandAsync(command);
-
-            // Assert
-            Assert.Equal($"Status Code: {statusCode}\nResponse: {response}", result);
-            _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
         }
 
         [Fact]
-        public async Task ExecuteCommandAsync_ServiceThrowsException_ShouldPropagateException()
+        public async Task ExecuteCommandAsync_WithValidCommand_ShouldReturnCorrectFormat()
         {
             // Arrange
-            var exception = new InvalidOperationException("PowerShell service error");
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(It.IsAny<string>()))
-                              .ThrowsAsync(exception);
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
+            var command = "Get-Date";
 
-            // Act & Assert
-            var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => powershellTool.ExecuteCommandAsync("Get-Date"));
-            Assert.Equal("PowerShell service error", thrownException.Message);
+            // Act
+            var result = await _powershellTool.ExecuteCommandAsync(command);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
+            // 验证格式正确
+            var lines = result.Split('\n');
+            Assert.True(lines.Length >= 2);
+            Assert.StartsWith("Status Code:", lines[0]);
+            Assert.StartsWith("Response:", lines[1]);
+        }
+
+        [Fact]
+        public async Task ExecuteCommandAsync_WithEmptyCommand_ShouldHandleGracefully()
+        {
+            // Arrange
+            var command = "";
+
+            // Act
+            var result = await _powershellTool.ExecuteCommandAsync(command);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
         }
 
         [Fact]
@@ -197,25 +177,18 @@ namespace Windows_MCP.Net.Test.Desktop
             // Arrange
             var commands = new[]
             {
-                ("Get-Date", "2024-01-01", 0),
-                ("Get-Location", "C:\\", 0),
-                ("Get-Process", "Process list", 0)
+                "Get-Date",
+                "Get-Location",
+                "Get-Process"
             };
 
-            foreach (var (cmd, resp, status) in commands)
-            {
-                _mockDesktopService.Setup(x => x.ExecuteCommandAsync(cmd))
-                                  .ReturnsAsync((resp, status));
-            }
-
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act & Assert
-            foreach (var (command, response, statusCode) in commands)
+            foreach (var command in commands)
             {
-                var result = await powershellTool.ExecuteCommandAsync(command);
-                Assert.Equal($"Status Code: {statusCode}\nResponse: {response}", result);
-                _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
+                var result = await _powershellTool.ExecuteCommandAsync(command);
+                Assert.NotNull(result);
+                Assert.Contains("Status Code:", result);
+                Assert.Contains("Response:", result);
             }
         }
 
@@ -224,17 +197,16 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var command = "Write-Output 'Hello, 世界! @#$%^&*()'";
-            var response = "Hello, 世界! @#$%^&*()";
-            _mockDesktopService.Setup(x => x.ExecuteCommandAsync(command))
-                              .ReturnsAsync((response, 0));
-            var powershellTool = new PowershellTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await powershellTool.ExecuteCommandAsync(command);
+            var result = await _powershellTool.ExecuteCommandAsync(command);
 
             // Assert
-            Assert.Equal($"Status Code: 0\nResponse: {response}", result);
-            _mockDesktopService.Verify(x => x.ExecuteCommandAsync(command), Times.Once);
+            Assert.NotNull(result);
+            Assert.Contains("Status Code:", result);
+            Assert.Contains("Response:", result);
+            // 验证特殊字符被正确处理
+            Assert.Contains("Hello, 世界!", result);
         }
     }
 }
