@@ -93,7 +93,7 @@ public class OcrService : IOcrService, IDisposable
                         try
                         {
                             _logger.LogInformation("Downloading OCR model...");
-                            _model = OnlineFullModels.ChineseV4.DownloadAsync().GetAwaiter().GetResult();
+                            _model = OnlineFullModels.ChineseV4.DownloadAsync().Result;
                             _logger.LogInformation("OCR model downloaded successfully");
                         }
                         catch (Exception ex)
@@ -234,7 +234,7 @@ public class OcrService : IOcrService, IDisposable
         try
         {
             await InitializeModelAsync();
-            
+
             using (PaddleOcrAll all = new(_model)
             {
                 AllowRotateDetection = true,
