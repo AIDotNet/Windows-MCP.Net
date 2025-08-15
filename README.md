@@ -34,10 +34,10 @@
 ```json
 {
     "mcpServers": {
-     "Windows-MCP.Net": {
+     "WindowsMCP.Net": {
       "type": "stdio",
       "command": "dnx",
-      "args": ["Windows-MCP.Net@", "--yes"],
+      "args": ["WindowsMCP.Net@", "--yes"],
       "env": {}
     }
     }
