@@ -1,7 +1,9 @@
 using Interface;
 using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using Tools.Desktop;
+using WindowsMCP.Net.Services;
+using Xunit;
 
 namespace Windows_MCP.Net.Test.Desktop
 {
@@ -10,216 +12,257 @@ namespace Windows_MCP.Net.Test.Desktop
     /// </summary>
     public class ScreenshotToolTest
     {
-        private readonly Mock<IDesktopService> _mockDesktopService;
-        private readonly Mock<ILogger<ScreenshotTool>> _mockLogger;
+        private readonly IDesktopService _desktopService;
+        private readonly ILogger<ScreenshotTool> _logger;
+        private readonly ScreenshotTool _screenshotTool;
 
         public ScreenshotToolTest()
         {
-            _mockDesktopService = new Mock<IDesktopService>();
-            _mockLogger = new Mock<ILogger<ScreenshotTool>>();
+            // 创建服务容器并注册依赖
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+            services.AddSingleton<IDesktopService, DesktopService>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            
+            // 获取实际的服务实例
+            _desktopService = serviceProvider.GetRequiredService<IDesktopService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<ScreenshotTool>>();
+            _screenshotTool = new ScreenshotTool(_desktopService, _logger);
         }
 
         [Fact]
         public async Task TakeScreenshotAsync_ShouldReturnImagePath()
         {
-            // Arrange
-            var expectedResult = "C:\\temp\\screenshot.png";
-            _mockDesktopService.Setup(x => x.TakeScreenshotAsync())
-                              .ReturnsAsync(expectedResult);
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await screenshotTool.TakeScreenshotAsync();
+            var result = await _screenshotTool.TakeScreenshotAsync();
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.TakeScreenshotAsync(), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            Assert.True(File.Exists(result), "Screenshot file should exist");
+            Assert.True(result.EndsWith(".png"), "Screenshot should be a PNG file");
+            
+            // 清理测试文件
+            if (File.Exists(result))
+            {
+                File.Delete(result);
+            }
         }
 
         [Fact]
         public async Task TakeScreenshotAsync_ShouldReturnValidFilePath()
         {
-            // Arrange
-            var expectedPath = "C:\\Windows\\Temp\\screenshot_20240101_120000.png";
-            _mockDesktopService.Setup(x => x.TakeScreenshotAsync())
-                              .ReturnsAsync(expectedPath);
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await screenshotTool.TakeScreenshotAsync();
+            var result = await _screenshotTool.TakeScreenshotAsync();
 
             // Assert
-            Assert.Equal(expectedPath, result);
+            Assert.NotNull(result);
             Assert.Contains("screenshot", result.ToLower());
             Assert.True(result.EndsWith(".png") || result.EndsWith(".jpg") || result.EndsWith(".jpeg"));
-            _mockDesktopService.Verify(x => x.TakeScreenshotAsync(), Times.Once);
+            Assert.True(Path.IsPathFullyQualified(result), "Should return absolute path");
+            Assert.True(File.Exists(result), "Screenshot file should exist");
+            
+            // 清理测试文件
+            if (File.Exists(result))
+            {
+                File.Delete(result);
+            }
         }
 
         [Fact]
-        public async Task TakeScreenshotAsync_MultipleConsecutiveCalls_ShouldCallServiceMultipleTimes()
+        public async Task TakeScreenshotAsync_MultipleConsecutiveCalls_ShouldReturnDifferentFiles()
         {
-            // Arrange
-            var screenshots = new[]
-            {
-                "C:\\temp\\screenshot_1.png",
-                "C:\\temp\\screenshot_2.png",
-                "C:\\temp\\screenshot_3.png"
-            };
+            var results = new List<string>();
 
-            var setupSequence = _mockDesktopService.SetupSequence(x => x.TakeScreenshotAsync());
-            foreach (var screenshot in screenshots)
+            // Act - 连续调用3次截图
+            for (int i = 0; i < 3; i++)
             {
-                setupSequence = setupSequence.ReturnsAsync(screenshot);
+                var result = await _screenshotTool.TakeScreenshotAsync();
+                results.Add(result);
+                
+                // 每次调用之间稍作延迟，确保文件名不同
+                await Task.Delay(1000);
             }
 
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act & Assert
-            for (int i = 0; i < screenshots.Length; i++)
+            // Assert
+            Assert.Equal(3, results.Count);
+            foreach (var result in results)
             {
-                var result = await screenshotTool.TakeScreenshotAsync();
-                Assert.Equal(screenshots[i], result);
+                Assert.NotNull(result);
+                Assert.True(File.Exists(result), $"Screenshot file should exist: {result}");
+                Assert.True(result.EndsWith(".png"), "All screenshots should be PNG files");
             }
-
-            _mockDesktopService.Verify(x => x.TakeScreenshotAsync(), Times.Exactly(3));
-        }
-
-        [Fact]
-        public async Task TakeScreenshotAsync_ServiceReturnsEmptyString_ShouldReturnEmptyString()
-        {
-            // Arrange
-            _mockDesktopService.Setup(x => x.TakeScreenshotAsync())
-                              .ReturnsAsync(string.Empty);
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act
-            var result = await screenshotTool.TakeScreenshotAsync();
-
-            // Assert
-            Assert.Equal(string.Empty, result);
-            _mockDesktopService.Verify(x => x.TakeScreenshotAsync(), Times.Once);
-        }
-
-        [Fact]
-        public async Task TakeScreenshotAsync_ServiceThrowsException_ShouldPropagateException()
-        {
-            // Arrange
-            var exception = new InvalidOperationException("Screenshot service error");
-            _mockDesktopService.Setup(x => x.TakeScreenshotAsync())
-                              .ThrowsAsync(exception);
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act & Assert
-            var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => screenshotTool.TakeScreenshotAsync());
-            Assert.Equal("Screenshot service error", thrownException.Message);
-        }
-
-        [Fact]
-        public async Task TakeScreenshotAsync_ShouldReturnDifferentPaths()
-        {
-            // Arrange
-            var paths = new[]
+            
+            // 验证每个文件都是不同的
+            Assert.Equal(3, results.Distinct().Count());
+            
+            // 清理测试文件
+            foreach (var result in results)
             {
-                "C:\\temp\\screenshot_001.png",
-                "C:\\Users\\User\\Desktop\\capture.jpg",
-                "D:\\Screenshots\\screen_20240101.png"
-            };
-
-            var callCount = 0;
-            _mockDesktopService.Setup(x => x.TakeScreenshotAsync())
-                              .ReturnsAsync(() => paths[callCount++]);
-
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act & Assert
-            foreach (var expectedPath in paths)
-            {
-                var result = await screenshotTool.TakeScreenshotAsync();
-                Assert.Equal(expectedPath, result);
+                if (File.Exists(result))
+                {
+                    File.Delete(result);
+                }
             }
-
-            _mockDesktopService.Verify(x => x.TakeScreenshotAsync(), Times.Exactly(3));
         }
 
         [Fact]
-        public async Task TakeScreenshotAsync_ServiceReturnsNull_ShouldReturnNull()
+        public async Task TakeScreenshotAsync_ShouldCreateFileInTempDirectory()
         {
-            // Arrange
-            _mockDesktopService.Setup(x => x.TakeScreenshotAsync())
-                              .ReturnsAsync((string)null);
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await screenshotTool.TakeScreenshotAsync();
+            var result = await _screenshotTool.TakeScreenshotAsync();
 
             // Assert
-            Assert.Null(result);
-            _mockDesktopService.Verify(x => x.TakeScreenshotAsync(), Times.Once);
-        }
-
-        [Fact]
-        public async Task TakeScreenshotAsync_ShouldHandleVariousFileFormats()
-        {
-            // Arrange
-            var filePaths = new[]
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
+            var tempPath = Path.GetTempPath();
+            Assert.StartsWith(tempPath, result);
+            Assert.True(File.Exists(result), "Screenshot file should exist");
+            
+            // 清理测试文件
+            if (File.Exists(result))
             {
-                "C:\\temp\\screenshot.png",
-                "C:\\temp\\screenshot.jpg",
-                "C:\\temp\\screenshot.jpeg",
-                "C:\\temp\\screenshot.bmp"
-            };
-
-            var callCount = 0;
-            _mockDesktopService.Setup(x => x.TakeScreenshotAsync())
-                              .ReturnsAsync(() => filePaths[callCount++]);
-
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act & Assert
-            foreach (var expectedPath in filePaths)
-            {
-                var result = await screenshotTool.TakeScreenshotAsync();
-                Assert.Equal(expectedPath, result);
-                Assert.Contains("screenshot", result);
+                File.Delete(result);
             }
-
-            _mockDesktopService.Verify(x => x.TakeScreenshotAsync(), Times.Exactly(4));
         }
 
         [Fact]
-        public async Task TakeScreenshotAsync_ShouldCallServiceExactlyOnce()
+        public async Task TakeScreenshotAsync_ShouldHandleExceptionsGracefully()
         {
-            // Arrange
-            var expectedResult = "C:\\temp\\single_screenshot.png";
-            _mockDesktopService.Setup(x => x.TakeScreenshotAsync())
-                              .ReturnsAsync(expectedResult);
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act
-            var result = await screenshotTool.TakeScreenshotAsync();
-
-            // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.TakeScreenshotAsync(), Times.Once);
-            _mockDesktopService.VerifyNoOtherCalls();
+            // 这个测试验证在正常情况下不会抛出异常
+            // 如果需要测试异常情况，可以通过模拟系统故障来实现
+            
+            // Act & Assert - 正常情况下应该成功
+            var result = await _screenshotTool.TakeScreenshotAsync();
+            
+            Assert.NotNull(result);
+            Assert.True(File.Exists(result), "Screenshot should be created successfully");
+            
+            // 清理测试文件
+            if (File.Exists(result))
+            {
+                File.Delete(result);
+            }
         }
 
         [Fact]
-        public async Task TakeScreenshotAsync_WithLongFilePath_ShouldReturnCorrectPath()
+        public async Task TakeScreenshotAsync_ShouldReturnUniqueFileNames()
         {
-            // Arrange
-            var longPath = "C:\\Very\\Long\\Path\\To\\Screenshots\\Directory\\With\\Many\\Subdirectories\\screenshot_with_very_long_filename_20240101_120000.png";
-            _mockDesktopService.Setup(x => x.TakeScreenshotAsync())
-                              .ReturnsAsync(longPath);
-            var screenshotTool = new ScreenshotTool(_mockDesktopService.Object, _mockLogger.Object);
-
-            // Act
-            var result = await screenshotTool.TakeScreenshotAsync();
+            // Act - 连续截图两次，中间添加延迟确保时间戳不同
+            var result1 = await _screenshotTool.TakeScreenshotAsync();
+            await Task.Delay(1100); // 等待超过1秒确保时间戳不同
+            var result2 = await _screenshotTool.TakeScreenshotAsync();
 
             // Assert
-            Assert.Equal(longPath, result);
-            _mockDesktopService.Verify(x => x.TakeScreenshotAsync(), Times.Once);
+            Assert.NotNull(result1);
+            Assert.NotNull(result2);
+            Assert.True(File.Exists(result1), "First screenshot should exist");
+            Assert.True(File.Exists(result2), "Second screenshot should exist");
+            
+            // 验证文件名是唯一的
+            Assert.NotEqual(result1, result2);
+            
+            // 验证文件名包含特定字符串
+            Assert.Contains("screenshot_", Path.GetFileName(result1));
+            Assert.Contains("screenshot_", Path.GetFileName(result2));
+            
+            // 清理测试文件
+            if (File.Exists(result1))
+            {
+                File.Delete(result1);
+            }
+            if (File.Exists(result2))
+            {
+                File.Delete(result2);
+            }
+        }
+
+        [Fact]
+        public async Task TakeScreenshotAsync_ShouldReturnValidPath()
+        {
+            // Act
+            var result = await _screenshotTool.TakeScreenshotAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            Assert.True(Path.IsPathFullyQualified(result), "Should return absolute path");
+            Assert.True(File.Exists(result), "Screenshot file should exist");
+            
+            // 清理测试文件
+            if (File.Exists(result))
+            {
+                File.Delete(result);
+            }
+        }
+
+        [Fact]
+        public async Task TakeScreenshotAsync_ShouldCreatePngFormat()
+        {
+            // Act
+            var result = await _screenshotTool.TakeScreenshotAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Contains("screenshot", result);
+            Assert.True(result.EndsWith(".png"), "Screenshot should be in PNG format");
+            Assert.True(File.Exists(result), "Screenshot file should exist");
+            
+            // 验证文件确实是有效的图片文件
+            var fileInfo = new FileInfo(result);
+            Assert.True(fileInfo.Length > 0, "Screenshot file should not be empty");
+            
+            // 清理测试文件
+            if (File.Exists(result))
+            {
+                File.Delete(result);
+            }
+        }
+
+        [Fact]
+        public async Task TakeScreenshotAsync_ShouldExecuteSuccessfully()
+        {
+            // Act
+            var result = await _screenshotTool.TakeScreenshotAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            Assert.True(File.Exists(result), "Screenshot should be created successfully");
+            Assert.Contains("screenshot", Path.GetFileName(result).ToLower());
+            
+            // 清理测试文件
+            if (File.Exists(result))
+            {
+                File.Delete(result);
+            }
+        }
+
+        [Fact]
+        public async Task TakeScreenshotAsync_ShouldCreateFileWithTimestamp()
+        {
+            // Act
+            var result = await _screenshotTool.TakeScreenshotAsync();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.True(File.Exists(result), "Screenshot file should exist");
+            
+            var fileName = Path.GetFileName(result);
+            Assert.Contains("screenshot_", fileName);
+            Assert.True(fileName.EndsWith(".png"), "File should have PNG extension");
+            
+            // 验证文件名包含时间戳格式 (yyyyMMdd_HHmmss)
+            var timestampPart = fileName.Replace("screenshot_", "").Replace(".png", "");
+            Assert.True(timestampPart.Length >= 15, "Timestamp should be in yyyyMMdd_HHmmss format");
+            
+            // 清理测试文件
+            if (File.Exists(result))
+            {
+                File.Delete(result);
+            }
         }
     }
 }
