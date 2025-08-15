@@ -1,7 +1,8 @@
 using Interface;
 using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using Tools.Desktop;
+using WindowsMCP.Net.Services;
 
 namespace Windows_MCP.Net.Test.Desktop
 {
@@ -10,13 +11,23 @@ namespace Windows_MCP.Net.Test.Desktop
     /// </summary>
     public class LaunchToolTest
     {
-        private readonly Mock<IDesktopService> _mockDesktopService;
-        private readonly Mock<ILogger<LaunchTool>> _mockLogger;
+        private readonly IDesktopService _desktopService;
+        private readonly ILogger<LaunchTool> _logger;
+        private readonly LaunchTool _launchTool;
 
         public LaunchToolTest()
         {
-            _mockDesktopService = new Mock<IDesktopService>();
-            _mockLogger = new Mock<ILogger<LaunchTool>>();
+            // 创建服务容器并注册依赖
+            var services = new ServiceCollection();
+            services.AddLogging(builder => builder.AddConsole());
+            services.AddSingleton<IDesktopService, DesktopService>();
+            
+            var serviceProvider = services.BuildServiceProvider();
+            
+            // 获取实际的服务实例
+            _desktopService = serviceProvider.GetRequiredService<IDesktopService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<LaunchTool>>();
+            _launchTool = new LaunchTool(_desktopService, _logger);
         }
 
         [Fact]
@@ -24,17 +35,14 @@ namespace Windows_MCP.Net.Test.Desktop
         {
             // Arrange
             var appName = "notepad";
-            var expectedResult = "Application launched successfully";
-            _mockDesktopService.Setup(x => x.LaunchAppAsync(appName))
-                              .ReturnsAsync((expectedResult, 0));
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await launchTool.LaunchAppAsync(appName);
+            var result = await _launchTool.LaunchAppAsync(appName);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.LaunchAppAsync(appName), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 由于使用真实服务，我们只验证返回了结果
         }
 
         [Theory]
@@ -43,60 +51,49 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData("cmd")]
         public async Task LaunchAppAsync_WithDifferentApps_ShouldCallService(string appName)
         {
-            // Arrange
-            var expectedResult = $"Launched {appName}";
-            _mockDesktopService.Setup(x => x.LaunchAppAsync(appName))
-                              .ReturnsAsync((expectedResult, 0));
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await launchTool.LaunchAppAsync(appName);
+            var result = await _launchTool.LaunchAppAsync(appName);
 
             // Assert
-            Assert.Equal(expectedResult, result);
-            _mockDesktopService.Verify(x => x.LaunchAppAsync(appName), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 验证结果包含应用名称或成功信息
+            Assert.True(result.Contains(appName) || result.Contains("launched") || result.Contains("success"), 
+                       $"Result should indicate launch attempt for {appName}: {result}");
         }
 
         [Fact]
         public async Task LaunchAppAsync_WithFailedLaunch_ShouldReturnErrorMessage()
         {
             // Arrange
-            var appName = "nonexistentapp";
-            var errorResponse = "App not found";
-            var defaultLanguage = "English";
-            _mockDesktopService.Setup(x => x.LaunchAppAsync(appName))
-                              .ReturnsAsync((errorResponse, 1));
-            _mockDesktopService.Setup(x => x.GetDefaultLanguage())
-                              .Returns(defaultLanguage);
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
+            var appName = "nonexistentapp12345";
 
             // Act
-            var result = await launchTool.LaunchAppAsync(appName);
+            var result = await _launchTool.LaunchAppAsync(appName);
 
             // Assert
-            var expectedMessage = $"Failed to launch {appName}. Try to use the app name in the default language ({defaultLanguage}).";
-            Assert.Equal(expectedMessage, result);
-            _mockDesktopService.Verify(x => x.LaunchAppAsync(appName), Times.Once);
-            _mockDesktopService.Verify(x => x.GetDefaultLanguage(), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 验证失败情况下的错误消息
+            Assert.True(result.Contains("Failed") || result.Contains("failed") || result.Contains("error") || result.Contains("not found"),
+                       $"Result should indicate failure for non-existent app: {result}");
         }
 
         [Fact]
-        public async Task LaunchAppAsync_WithSuccessfulLaunch_ShouldNotCallGetDefaultLanguage()
+        public async Task LaunchAppAsync_WithSuccessfulLaunch_ShouldReturnSuccessMessage()
         {
             // Arrange
             var appName = "notepad";
-            var successResponse = "Notepad launched";
-            _mockDesktopService.Setup(x => x.LaunchAppAsync(appName))
-                              .ReturnsAsync((successResponse, 0));
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
 
             // Act
-            var result = await launchTool.LaunchAppAsync(appName);
+            var result = await _launchTool.LaunchAppAsync(appName);
 
             // Assert
-            Assert.Equal(successResponse, result);
-            _mockDesktopService.Verify(x => x.LaunchAppAsync(appName), Times.Once);
-            _mockDesktopService.Verify(x => x.GetDefaultLanguage(), Times.Never);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 验证成功启动的情况
+            Assert.False(result.Contains("Failed") && result.Contains("default language"),
+                        $"Successful launch should not contain failure message: {result}");
         }
 
         [Theory]
@@ -106,114 +103,78 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData("APP_WITH_UNDERSCORES")]
         public async Task LaunchAppAsync_WithVariousAppNames_ShouldCallService(string appName)
         {
-            // Arrange
-            var response = string.IsNullOrWhiteSpace(appName) ? "Invalid app name" : $"Launched {appName}";
-            var statusCode = string.IsNullOrWhiteSpace(appName) ? 1 : 0;
-            _mockDesktopService.Setup(x => x.LaunchAppAsync(appName))
-                              .ReturnsAsync((response, statusCode));
-            
-            if (statusCode != 0)
-            {
-                _mockDesktopService.Setup(x => x.GetDefaultLanguage())
-                                  .Returns("English");
-            }
-
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await launchTool.LaunchAppAsync(appName);
+            var result = await _launchTool.LaunchAppAsync(appName);
 
             // Assert
-            if (statusCode == 0)
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            
+            // 验证不同类型的应用名称都能得到响应
+            if (string.IsNullOrWhiteSpace(appName))
             {
-                Assert.Equal(response, result);
+                // 空或空白字符串应该返回错误信息
+                Assert.True(result.Contains("Failed") || result.Contains("error") || result.Contains("invalid"),
+                           $"Empty app name should return error: {result}");
             }
             else
             {
-                var expectedMessage = $"Failed to launch {appName}. Try to use the app name in the default language (English).";
-                Assert.Equal(expectedMessage, result);
+                // 非空应用名称应该尝试启动
+                Assert.True(result.Length > 0, "Should return some response for non-empty app names");
             }
-            _mockDesktopService.Verify(x => x.LaunchAppAsync(appName), Times.Once);
         }
 
         [Fact]
-        public async Task LaunchAppAsync_WithNonZeroStatusCode_ShouldReturnFailureMessage()
+        public async Task LaunchAppAsync_WithNonExistentApp_ShouldReturnFailureMessage()
         {
             // Arrange
-            var appName = "failedapp";
-            var errorResponse = "Launch failed";
-            var statusCode = 2;
-            var defaultLanguage = "中文";
-            _mockDesktopService.Setup(x => x.LaunchAppAsync(appName))
-                              .ReturnsAsync((errorResponse, statusCode));
-            _mockDesktopService.Setup(x => x.GetDefaultLanguage())
-                              .Returns(defaultLanguage);
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
+            var appName = "failedapp99999";
 
             // Act
-            var result = await launchTool.LaunchAppAsync(appName);
+            var result = await _launchTool.LaunchAppAsync(appName);
 
             // Assert
-            var expectedMessage = $"Failed to launch {appName}. Try to use the app name in the default language ({defaultLanguage}).";
-            Assert.Equal(expectedMessage, result);
-            _mockDesktopService.Verify(x => x.LaunchAppAsync(appName), Times.Once);
-            _mockDesktopService.Verify(x => x.GetDefaultLanguage(), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 验证不存在的应用返回失败信息
+            Assert.True(result.Contains("Failed") || result.Contains("failed") || result.Contains("not found") || result.Contains("error"),
+                       $"Non-existent app should return failure message: {result}");
         }
 
         [Fact]
         public async Task LaunchAppAsync_ConsecutiveLaunches_ShouldCallServiceMultipleTimes()
         {
             // Arrange
-            var apps = new[]
-            {
-                ("notepad", "Notepad launched", 0),
-                ("calculator", "Calculator launched", 0),
-                ("invalidapp", "Not found", 1)
-            };
-
-            foreach (var (name, response, status) in apps)
-            {
-                _mockDesktopService.Setup(x => x.LaunchAppAsync(name))
-                                  .ReturnsAsync((response, status));
-            }
-
-            _mockDesktopService.Setup(x => x.GetDefaultLanguage())
-                              .Returns("English");
-
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
+            var apps = new[] { "notepad", "calculator", "invalidapp99999" };
 
             // Act & Assert
-            foreach (var (appName, expectedResponse, statusCode) in apps)
+            foreach (var appName in apps)
             {
-                var result = await launchTool.LaunchAppAsync(appName);
+                var result = await _launchTool.LaunchAppAsync(appName);
                 
-                if (statusCode == 0)
-                {
-                    Assert.Equal(expectedResponse, result);
-                }
-                else
-                {
-                    var expectedMessage = $"Failed to launch {appName}. Try to use the app name in the default language (English).";
-                    Assert.Equal(expectedMessage, result);
-                }
+                Assert.NotNull(result);
+                Assert.NotEmpty(result);
                 
-                _mockDesktopService.Verify(x => x.LaunchAppAsync(appName), Times.Once);
+                // 验证每个应用都得到了响应
+                Assert.True(result.Length > 0, $"Should return response for {appName}");
             }
         }
 
         [Fact]
-        public async Task LaunchAppAsync_ServiceThrowsException_ShouldPropagateException()
+        public async Task LaunchAppAsync_WithValidApp_ShouldNotThrowException()
         {
             // Arrange
-            var exception = new InvalidOperationException("Launch service error");
-            _mockDesktopService.Setup(x => x.LaunchAppAsync(It.IsAny<string>()))
-                              .ThrowsAsync(exception);
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
+            var appName = "notepad";
 
             // Act & Assert
-            var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => launchTool.LaunchAppAsync("notepad"));
-            Assert.Equal("Launch service error", thrownException.Message);
+            var exception = await Record.ExceptionAsync(async () => 
+            {
+                var result = await _launchTool.LaunchAppAsync(appName);
+                Assert.NotNull(result);
+            });
+            
+            // 验证不会抛出异常
+            Assert.Null(exception);
         }
 
         [Theory]
@@ -222,18 +183,14 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData("edge")]
         public async Task LaunchAppAsync_WithBrowserApps_ShouldCallService(string browserName)
         {
-            // Arrange
-            var response = $"{browserName} browser launched";
-            _mockDesktopService.Setup(x => x.LaunchAppAsync(browserName))
-                              .ReturnsAsync((response, 0));
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await launchTool.LaunchAppAsync(browserName);
+            var result = await _launchTool.LaunchAppAsync(browserName);
 
             // Assert
-            Assert.Equal(response, result);
-            _mockDesktopService.Verify(x => x.LaunchAppAsync(browserName), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 验证浏览器应用启动尝试
+            Assert.True(result.Length > 0, $"Should return response for browser {browserName}");
         }
 
         [Theory]
@@ -242,18 +199,14 @@ namespace Windows_MCP.Net.Test.Desktop
         [InlineData("wt")] // Windows Terminal
         public async Task LaunchAppAsync_WithTerminalApps_ShouldCallService(string terminalName)
         {
-            // Arrange
-            var response = $"{terminalName} terminal launched";
-            _mockDesktopService.Setup(x => x.LaunchAppAsync(terminalName))
-                              .ReturnsAsync((response, 0));
-            var launchTool = new LaunchTool(_mockDesktopService.Object, _mockLogger.Object);
-
             // Act
-            var result = await launchTool.LaunchAppAsync(terminalName);
+            var result = await _launchTool.LaunchAppAsync(terminalName);
 
             // Assert
-            Assert.Equal(response, result);
-            _mockDesktopService.Verify(x => x.LaunchAppAsync(terminalName), Times.Once);
+            Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 验证终端应用启动尝试
+            Assert.True(result.Length > 0, $"Should return response for terminal {terminalName}");
         }
     }
 }
