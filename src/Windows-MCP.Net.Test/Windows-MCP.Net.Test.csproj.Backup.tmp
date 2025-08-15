@@ -26,9 +26,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="images\**\*">
+    <None Update="images\NotepadWriting.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
+    <None Update="images\OpenWebSearch.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

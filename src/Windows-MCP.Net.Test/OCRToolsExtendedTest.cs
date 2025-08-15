@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Text.Json;
 using WindowsMCP.Net.Tools.OCR;
 using Interface;
+using System.IO;
 
 namespace Windows_MCP.Net.Test
 {
@@ -344,5 +345,161 @@ namespace Windows_MCP.Net.Test
             Assert.Equal(expectedResult, jsonResult.GetProperty("text").GetString());
             _mockOcrService.Verify(s => s.ExtractTextFromRegionAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
+
+        #region 使用真实图片文件的OCR测试
+
+        [Fact]
+        public async Task ExtractTextFromImageAsync_WithNotepadWritingPng_ShouldExtractText()
+        {
+            // Arrange
+            var imagePath = @"images\NotepadWriting.png";
+            var expectedText = "Sample text from notepad";
+            _mockOcrService.Setup(s => s.ExtractTextFromImageAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                          .ReturnsAsync((expectedText, 0));
+           
+            // Act - 模拟读取图片文件并进行OCR
+            string result;
+            using (var fileStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+            {
+                var (text, status) = await _mockOcrService.Object.ExtractTextFromImageAsync(fileStream);
+                result = JsonSerializer.Serialize(new
+                {
+                    success = status == 0,
+                    text = status == 0 ? text : string.Empty,
+                    message = status == 0 ? "Text extracted successfully from NotepadWriting.png" : "Failed to extract text",
+                    imagePath = imagePath
+                });
+            }
+
+            // Assert
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedText, jsonResult.GetProperty("text").GetString());
+            Assert.Contains("NotepadWriting.png", jsonResult.GetProperty("message").GetString());
+            _mockOcrService.Verify(s => s.ExtractTextFromImageAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExtractTextFromImageAsync_WithOpenWebSearchPng_ShouldExtractText()
+        {
+            // Arrange
+            var imagePath = @"images\OpenWebSearch.png";
+            var expectedText = "Web Search Interface";
+            
+            // 模拟从图片中提取文本
+            _mockOcrService.Setup(s => s.ExtractTextFromImageAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                          .ReturnsAsync((expectedText, 0));
+
+            // Act - 模拟读取图片文件并进行OCR
+            string result;
+            using (var fileStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+            {
+                var (text, status) = await _mockOcrService.Object.ExtractTextFromImageAsync(fileStream);
+                result = JsonSerializer.Serialize(new
+                {
+                    success = status == 0,
+                    text = status == 0 ? text : string.Empty,
+                    message = status == 0 ? "Text extracted successfully from OpenWebSearch.png" : "Failed to extract text",
+                    imagePath = imagePath
+                });
+            }
+
+            // Assert
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.Equal(expectedText, jsonResult.GetProperty("text").GetString());
+            Assert.Contains("OpenWebSearch.png", jsonResult.GetProperty("message").GetString());
+            _mockOcrService.Verify(s => s.ExtractTextFromImageAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Theory]
+        [InlineData("NotepadWriting.png", "Notepad")]
+        [InlineData("OpenWebSearch.png", "Search")]
+        public async Task GetTextCoordinatesAsync_WithRealImages_ShouldFindTextCoordinates(string imageName, string searchText)
+        {
+            // Arrange
+            var imagePath = Path.Combine("images", imageName);
+            var expectedPoint = new Point(150, 200);
+            
+            // 模拟在图片中找到文本坐标
+            _mockOcrService.Setup(s => s.GetTextCoordinatesAsync(It.Is<string>(t => t == searchText), It.IsAny<CancellationToken>()))
+                          .ReturnsAsync((expectedPoint, 0));
+            
+            var getTextCoordinatesTool = new GetTextCoordinatesTool(_mockOcrService.Object, _mockGetTextCoordinatesLogger.Object);
+
+            // Act
+            var result = await getTextCoordinatesTool.GetTextCoordinatesAsync(searchText);
+
+            // Assert
+            var jsonResult = JsonSerializer.Deserialize<JsonElement>(result);
+            Assert.True(jsonResult.GetProperty("success").GetBoolean());
+            Assert.True(jsonResult.GetProperty("found").GetBoolean());
+            Assert.Equal(searchText, jsonResult.GetProperty("searchText").GetString());
+            Assert.Equal(150, jsonResult.GetProperty("coordinates").GetProperty("x").GetInt32());
+            Assert.Equal(200, jsonResult.GetProperty("coordinates").GetProperty("y").GetInt32());
+            _mockOcrService.Verify(s => s.GetTextCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExtractTextFromImageAsync_WithInvalidImagePath_ShouldHandleError()
+        {
+            // Arrange
+            var invalidImagePath = "C:\\NonExistentPath\\NonExistentImage.png";
+            
+            // Act & Assert
+            await Assert.ThrowsAsync<DirectoryNotFoundException>(async () =>
+            {
+                using var fileStream = new FileStream(invalidImagePath, FileMode.Open, FileAccess.Read);
+                await _mockOcrService.Object.ExtractTextFromImageAsync(fileStream);
+            });
+        }
+
+        [Fact]
+        public async Task ExtractTextFromImageAsync_WithMultipleImages_ShouldProcessAll()
+        {
+            // Arrange
+            var imageFiles = new[] { "NotepadWriting.png", "OpenWebSearch.png" };
+            var expectedTexts = new[] { "Notepad content", "Web search interface" };
+            
+            // 使用序列设置来确保每次调用返回不同的值
+            var setupSequence = _mockOcrService.SetupSequence(s => s.ExtractTextFromImageAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()));
+            for (int i = 0; i < expectedTexts.Length; i++)
+            {
+                setupSequence = setupSequence.ReturnsAsync((expectedTexts[i], 0));
+            }
+
+            // Act & Assert
+            for (int i = 0; i < imageFiles.Length; i++)
+            {
+                var imagePath = Path.Combine("images", imageFiles[i]);
+                
+                using var fileStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read);
+                var (text, status) = await _mockOcrService.Object.ExtractTextFromImageAsync(fileStream);
+                
+                Assert.Equal(0, status);
+                Assert.Equal(expectedTexts[i], text);
+            }
+            
+            _mockOcrService.Verify(s => s.ExtractTextFromImageAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Exactly(imageFiles.Length));
+        }
+
+        [Fact]
+        public async Task ExtractTextFromImageAsync_WithEmptyStream_ShouldHandleGracefully()
+        {
+            // Arrange
+            _mockOcrService.Setup(s => s.ExtractTextFromImageAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                          .ReturnsAsync((string.Empty, 1));
+
+            // Act
+            using var emptyStream = new MemoryStream();
+            var (text, status) = await _mockOcrService.Object.ExtractTextFromImageAsync(emptyStream);
+
+            // Assert
+            Assert.Equal(1, status);
+            Assert.Equal(string.Empty, text);
+            _mockOcrService.Verify(s => s.ExtractTextFromImageAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        #endregion
     }
 }
