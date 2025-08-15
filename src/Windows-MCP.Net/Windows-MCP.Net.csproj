@@ -7,18 +7,21 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     
-    <!-- 明确指定运行时标识符，确保native依赖正确加载 -->
-    <RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers>
-    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <!-- 移除多平台RuntimeIdentifiers配置，避免打包时找不到其他平台文件的错误 -->
+    <!-- <RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers> -->
+    <!-- 移除默认RuntimeIdentifier设置，避免包名称添加平台后缀 -->
+    <!-- <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier> -->
     
-    <!-- 确保native库正确复制和加载 -->
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <!-- 优化包大小，避免包含过多native库 -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <PublishSingleFile>false</PublishSingleFile>
+    <!-- 让NuGet在运行时自动解析native依赖 -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
 
     <!-- Set up the NuGet package to be an MCP server -->
     <PackAsTool>true</PackAsTool>
-    <PackageType>McpServer</PackageType>
+    <ToolCommandName>windows-mcp</ToolCommandName>
+    <PackageType>DotnetTool;McpServer</PackageType>
 
     <!-- Set recommended package metadata -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -35,17 +38,8 @@
     <None Include="runtimeconfig.template.json" Pack="true" PackagePath="tools/$(TargetFramework)/any/" />
   </ItemGroup>
   
-  <!-- 确保native库正确打包到工具包中 -->
-  <ItemGroup>
-    <Content Include="$(NuGetPackageRoot)opencvsharp4.runtime.win\**\runtimes\**" 
-             Pack="true" 
-             PackagePath="tools/$(TargetFramework)/any/runtimes/" 
-             Condition="Exists('$(NuGetPackageRoot)opencvsharp4.runtime.win')" />
-    <Content Include="$(NuGetPackageRoot)sdcb.openvino.runtime.win-x64\**\runtimes\**" 
-             Pack="true" 
-             PackagePath="tools/$(TargetFramework)/any/runtimes/" 
-             Condition="Exists('$(NuGetPackageRoot)sdcb.openvino.runtime.win-x64')" />
-  </ItemGroup>
+  <!-- 不直接打包native库，而是依赖NuGet的自动解析 -->
+  <!-- 这样可以避免包过大的问题，让dnx在运行时自动解析依赖 -->
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.6.25358.103" />
