@@ -151,4 +151,11 @@ public interface IDesktopService
     /// </summary>
     /// <returns>The file path of the saved screenshot</returns>
     Task<string> TakeScreenshotAsync();
+
+    /// <summary>
+    /// Open a URL in the default browser.
+    /// </summary>
+    /// <param name="url">The URL to open. If null or invalid, opens the default GitHub repository</param>
+    /// <returns>The result message</returns>
+    Task<string> OpenBrowserAsync(string? url = null);
 }

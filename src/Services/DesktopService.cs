@@ -1191,6 +1191,54 @@ public class DesktopService : IDesktopService
     }
 
     /// <summary>
+    /// 在默认浏览器中打开指定的URL
+    /// </summary>
+    /// <param name="url">要打开的URL，如果为空或无效则打开默认的GitHub仓库</param>
+    /// <returns>操作结果消息</returns>
+    public async Task<string> OpenBrowserAsync(string? url = null)
+    {
+        try
+        {
+            // 如果URL为空或无效，使用默认的GitHub仓库URL
+            if (string.IsNullOrWhiteSpace(url) || !IsValidHttpUrl(url))
+            {
+                url = "https://github.com/AIDotNet/Windows-MCP.Net";
+            }
+
+            _logger.LogInformation("Opening URL in browser: {Url}", url);
+
+            var processStartInfo = new ProcessStartInfo
+            {
+                FileName = "cmd",
+                Arguments = $"/c start {url}",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+
+            using var process = Process.Start(processStartInfo);
+            await Task.Delay(500); // 等待浏览器启动
+
+            return $"Successfully opened {url} in default browser";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error opening browser with URL: {Url}", url);
+            return $"Failed to open browser: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// 验证URL是否为有效的HTTP或HTTPS URL
+    /// </summary>
+    /// <param name="url">要验证的URL</param>
+    /// <returns>如果URL有效返回true，否则返回false</returns>
+    private static bool IsValidHttpUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uriResult) &&
+               (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
+
+    /// <summary>
     /// 释放资源，主要是释放HttpClient
     /// </summary>
     public void Dispose()
