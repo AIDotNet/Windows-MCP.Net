@@ -510,65 +510,6 @@ Run `MCP: Open User Configuration` through VS Code command palette, add:
 > **Note**: Using project source code method is convenient for development and debugging. Changes take effect without reinstallation. VS Code 1.102+ supports automatic discovery and management of MCP servers.
 
 
-## 📖 API Documentation
-
-### Example Operations
-
-#### Launch Application
-```json
-{
-  "tool": "LaunchTool",
-  "parameters": {
-    "name": "notepad"
-  }
-}
-```
-
-#### Click Operation
-```json
-{
-  "tool": "ClickTool",
-  "parameters": {
-    "x": 100,
-    "y": 200,
-    "button": "left",
-    "clicks": 1
-  }
-}
-```
-
-#### Text Input
-```json
-{
-  "tool": "TypeTool",
-  "parameters": {
-    "x": 100,
-    "y": 200,
-    "text": "Hello, World!",
-    "clear": false,
-    "pressEnter": false
-  }
-}
-```
-
-#### Get Desktop State
-```json
-{
-  "tool": "StateTool",
-  "parameters": {
-    "useVision": false
-  }
-}
-```
-
-#### Take Screenshot
-```json
-{
-  "tool": "ScreenshotTool",
-  "parameters": {}
-}
-```
-
 ## 🏗️ Project Structure
 
 ```
