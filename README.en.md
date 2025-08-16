@@ -4,6 +4,107 @@
 
 A .NET-based Windows desktop automation MCP (Model Context Protocol) server that provides AI assistants with the ability to interact with the Windows desktop environment.
 
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Use Cases](#-use-cases)
+- [Demo Screenshots](#-demo-screenshots)
+- [Tech Stack](#️-tech-stack)
+- [Quick Start](#-quick-start)
+- [API Documentation](#-api-documentation)
+- [Project Structure](#️-project-structure)
+- [Feature Extension Suggestions](#-feature-extension-suggestions)
+- [Configuration](#-configuration)
+- [Contributing](#-contributing)
+- [Changelog](#-changelog)
+- [Support](#-support)
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Windows Operating System
+- .NET 10.0 Runtime or higher
+
+**Important Note**: This project requires .NET 10 to run. Please ensure you have .NET 10 installed locally. If not installed, please visit the [.NET 10 Download Page](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) to download and install.
+
+### 1. MCP Client Configuration
+
+Add the following configuration to your MCP client:
+
+#### Using Global Installed Tool (Recommended)
+```json
+{
+    "mcpServers": {
+     "WindowsMCP.Net": {
+      "type": "stdio",
+      "command": "dnx",
+      "args": ["WindowsMCP.Net@", "--yes"],
+      "env": {}
+    }
+    }
+}
+```
+
+#### Using Project Source Code Direct Run (Development Mode)
+
+**Method 1: Workspace Configuration**
+
+Create `.vscode/mcp.json` file in project root:
+```json
+{
+  "mcpServers": {
+    "Windows-MCP.Net-Dev": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
+      "cwd": "${workspaceFolder}",
+      "env": {}
+    }
+  }
+}
+```
+
+**Method 2: User Configuration**
+
+Run `MCP: Open User Configuration` through VS Code command palette, add:
+```json
+{
+  "mcpServers": {
+    "Windows-MCP.Net-Local": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["run", "--project", "src/Windows-MCP.Net.csproj"],
+      "env": {}
+    }
+  }
+}
+```
+
+> **Note**: Using project source code method is convenient for development and debugging. Changes take effect without reinstallation. VS Code 1.102+ supports automatic discovery and management of MCP servers.
+
+### 2. Installation and Running
+
+#### Method 1: Global Installation (Recommended)
+```bash
+dotnet tool install --global WindowsMCP.Net
+```
+
+#### Method 2: Run from Source
+```bash
+# Clone repository
+git clone https://github.com/AIDotNet/Windows-MCP.Net.git
+cd Windows-MCP.Net
+
+# Build project
+dotnet build
+
+# Run project
+dotnet run --project src/Windows-MCP.Net.csproj
+```
+
+### 3. Getting Started
+After configuration is complete, restart your MCP client to start using Windows desktop automation features!
+
 ## 🚀 Features
 
 ### Core Functionality
@@ -16,9 +117,11 @@ A .NET-based Windows desktop automation MCP (Model Context Protocol) server that
 - **Window Management**: Resize windows, adjust positions, switch applications
 - **Scroll Operations**: Scroll at specified coordinates
 - **Web Scraping**: Fetch web content and convert to Markdown format
+- **Browser Operations**: Open specified URLs in default browser
 - **Screenshot Functionality**: Capture screen and save to temporary directory
 - **File System Operations**: Create, read, write, copy, move, delete files and directories
 - **OCR Text Recognition**: Extract text from screen or specified regions, find text locations
+- **System Control**: Adjust screen brightness, system volume, screen resolution and other system settings
 - **Wait Control**: Add delays between operations
 
 ### Supported Tools
@@ -43,6 +146,7 @@ A .NET-based Windows desktop automation MCP (Model Context Protocol) server that
 | **WaitTool** | Pause execution for specified seconds |
 | **ScrapeTool** | Scrape web content and convert to Markdown format |
 | **ScreenshotTool** | Capture screen and save to temporary directory, return image path |
+| **OpenBrowserTool** | Open specified URL in default browser |
 
 ## FileSystem Tools
 
@@ -68,6 +172,82 @@ A .NET-based Windows desktop automation MCP (Model Context Protocol) server that
 | **ExtractTextFromRegionTool** | Extract text from specified screen region using OCR |
 | **FindTextOnScreenTool** | Find specified text on screen using OCR |
 | **GetTextCoordinatesTool** | Get coordinates of text on screen |
+| **ExtractTextFromFileTool** | Extract text from image files using OCR |
+
+## UI Element Recognition Tools
+
+| Tool Name | Description |
+|-----------|-------------|
+| **FindElementByTextTool** | Find UI elements by text content |
+| **FindElementByClassNameTool** | Find UI elements by class name |
+| **FindElementByAutomationIdTool** | Find UI elements by automation ID |
+| **GetElementPropertiesTool** | Get properties of element at specified coordinates |
+| **WaitForElementTool** | Wait for specified element to appear on screen |
+
+## SystemControl Tools
+
+| Tool Name | Description |
+|-----------|-------------|
+| **BrightnessTool** | Adjust screen brightness, supports increase/decrease and specific percentage |
+| **VolumeTool** | Adjust system volume, supports increase/decrease and specific percentage |
+| **ResolutionTool** | Set screen resolution (high, medium, low settings) |
+
+## 💡 Use Cases
+
+### 🤖 AI Assistant Desktop Automation
+- **Intelligent Customer Service Robot**: AI assistants can automatically operate Windows applications to help users complete complex desktop tasks
+- **Voice Assistant Integration**: Combined with voice recognition, control desktop applications through voice commands
+- **Intelligent Office Assistant**: AI assistants automatically handle daily office tasks such as document organization, email sending, etc.
+
+### 📊 Office Automation
+- **Data Entry Automation**: Automatically extract data from web pages or documents and enter it into Excel or other applications
+- **Report Generation**: Automatically collect system information, screenshots, and generate formatted report documents
+- **Batch File Processing**: Automatically organize, rename, and categorize large numbers of files and documents
+- **Email Automation**: Automatically send periodic reports and notification emails
+
+### 🧪 Software Testing & Quality Assurance
+- **UI Automation Testing**: Simulate user operations to automatically test desktop application functionality
+- **Regression Testing**: Automatically execute repetitive test cases to ensure software quality
+- **Performance Monitoring**: Automatically collect application performance data and generate monitoring reports
+- **Bug Reproduction**: Automatically reproduce user-reported issues to assist developers in debugging
+
+### 🎯 Business Process Automation
+- **Customer Service**: Automatically handle customer requests and update CRM systems
+- **Order Processing**: Automatically collect order information from multiple channels and enter it into systems
+- **Inventory Management**: Automatically update inventory data and generate restocking reminders
+- **Financial Reconciliation**: Automatically compare financial data from different systems and mark discrepancies
+
+### 🔍 Data Collection & Analysis
+- **Web Data Scraping**: Automatically collect product prices, news, and other information from multiple websites
+- **Competitive Analysis**: Regularly collect competitor product information and pricing data
+- **Market Research**: Automatically collect and organize market data, generate analysis reports
+- **Social Media Monitoring**: Monitor brand mentions and automatically collect user feedback
+
+### 🎮 Gaming & Entertainment
+- **Game Assistance**: Automatically execute repetitive game tasks (please follow game rules)
+- **Streaming Assistant**: Automatically manage streaming software, switch scenes, send messages
+- **Media Management**: Automatically organize music and video files, update media libraries
+
+### 🏥 Healthcare & Medical
+- **Medical Record Entry**: Automatically convert paper medical records to electronic format
+- **Medical Image Analysis**: Combined with OCR technology, automatically extract key information from medical reports
+- **Appointment Management**: Automatically handle patient appointment requests and update hospital management systems
+
+### 🏫 Education & Training
+- **Online Examinations**: Automatically grade multiple-choice questions and generate grade reports
+- **Course Management**: Automatically update course information and send notifications to students
+- **Learning Progress Tracking**: Automatically record student learning activities and generate progress reports
+
+### 🏭 Manufacturing & Logistics
+- **Production Data Collection**: Automatically collect data from production equipment and update ERP systems
+- **Quality Inspection**: Combined with image recognition, automatically detect product quality
+- **Logistics Tracking**: Automatically update cargo status and send tracking information to customers
+
+### 🔧 System Operations
+- **Server Monitoring**: Automatically check server status and generate monitoring reports
+- **Log Analysis**: Automatically analyze system logs and identify abnormal patterns
+- **Backup Management**: Automatically execute data backups and verify backup integrity
+- **Software Deployment**: Automate software installation and configuration processes
 
 ## 📸 Demo Screenshots
 
@@ -86,6 +266,23 @@ Complete desktop automation operation demo:
 
 [网页搜索演示](assets/video.mp4)
 
+## 📸 Demo Screenshots
+
+### Text Input Demo
+Automatic text input in Notepad using TypeTool:
+
+![Text Input Demo](assets/NotepadWriting.png)
+
+### Web Search Demo
+Using ScrapeTool to open and search web content:
+
+![Web Search Demo](assets/OpenWebSearch.png)
+
+### 📹 Demo Video
+Complete desktop automation operation demonstration:
+
+[Web Search Demo](assets/video.mp4)
+
 ## 🛠️ Tech Stack
 
 - **.NET 10.0**: Based on the latest .NET framework
@@ -94,6 +291,128 @@ Complete desktop automation operation demo:
 - **Serilog**: Structured logging
 - **HtmlAgilityPack**: HTML parsing and web scraping
 - **ReverseMarkdown**: HTML to Markdown conversion
+
+## 🚧 Feature Extension Suggestions
+
+### Planned Features
+
+#### Advanced UI Recognition & Interaction
+- **Enhanced UI Element Recognition**: Support for more UI frameworks (WPF, WinForms, UWP)
+- **OCR Text Recognition Optimization**: Multi-language support, improved recognition accuracy
+- **Smart Wait Mechanism**: Dynamic waiting for element loading completion
+
+#### Enhanced File System Operations
+- **Advanced File Search**: Support for content search, regular expression matching
+- **Batch File Operations**: Support for batch copy, move, rename
+- **File Monitoring**: Real-time file system change monitoring
+
+#### System Monitoring & Performance Analysis
+- **System Resource Monitoring**: CPU, memory, disk, network usage
+- **Process Management**: Process listing, performance monitoring, process control
+- **Performance Analysis Reports**: Generate detailed system performance reports
+
+#### Multimedia Processing Capabilities
+- **Audio Control**: System volume control, audio device management
+- **Image Processing**: Image scaling, cropping, format conversion
+- **Screen Recording**: Support for screen recording and playback
+
+#### Network & Communication Features
+- **Network Diagnostics**: Ping, port scanning, connectivity testing
+- **HTTP Client**: Support for RESTful API calls
+- **WiFi Management**: WiFi network scanning and connection management
+
+#### Security & Permission Management
+- **Permission Checking**: User permission verification and management
+- **Data Encryption**: Encrypted storage of sensitive data
+- **Operation Auditing**: Complete operation logs and audit trails
+
+### Development Roadmap
+
+#### Phase 1 (High Priority) - Core Feature Enhancement
+- ✅ UI Element Recognition Tools (Completed Windows API implementation)
+- 🔄 Enhanced File Management Tools
+- 📋 System Monitoring Tools
+- 🔒 Basic Security Tools
+
+#### Phase 2 (Medium Priority) - Feature Expansion
+- 📋 OCR Text Recognition Optimization
+- 📋 Advanced File Search
+- 📋 Audio Control Tools
+- 📋 Network Diagnostic Tools
+- 📋 Excel Operation Support
+
+#### Phase 3 (Low Priority) - Advanced Features
+- 📋 Image Processing Tools
+- 📋 Task Scheduling System
+- 📋 Database Operation Support
+- 📋 Macro Recording & Playback
+
+## 🏗️ Project Structure
+
+```
+src/
+├── Windows-MCP.Net/         # Main project
+│   ├── .mcp/                # MCP server configuration
+│   │   └── server.json      # Server configuration file
+│   ├── Exceptions/          # Custom exception classes (to be extended)
+│   ├── Interface/           # Service interface definitions
+│   │   ├── IDesktopService.cs   # Desktop service interface
+│   │   ├── IFileSystemService.cs # File system service interface
+│   │   └── IOcrService.cs       # OCR service interface
+│   ├── Models/              # Data models (to be extended)
+│   ├── Prompts/             # Prompt templates (to be extended)
+│   ├── Services/            # Core service implementations
+│   │   ├── DesktopService.cs    # Desktop operation service
+│   │   ├── FileSystemService.cs # File system service
+│   │   └── OcrService.cs        # OCR service
+│   ├── Tools/               # MCP tool implementations
+│   │   ├── Desktop/             # Desktop operation tools
+│   │   │   ├── ClickTool.cs         # Click tool
+│   │   │   ├── ClipboardTool.cs     # Clipboard tool
+│   │   │   ├── DragTool.cs          # Drag tool
+│   │   │   ├── GetWindowInfoTool.cs # Window info tool
+│   │   │   ├── KeyTool.cs           # Key tool
+│   │   │   ├── LaunchTool.cs        # App launch tool
+│   │   │   ├── MoveTool.cs          # Mouse move tool
+│   │   │   ├── OpenBrowserTool.cs   # Browser open tool
+│   │   │   ├── PowershellTool.cs    # PowerShell execution tool
+│   │   │   ├── ResizeTool.cs        # Window resize tool
+│   │   │   ├── ScrapeTool.cs        # Web scraping tool
+│   │   │   ├── ScreenshotTool.cs    # Screenshot tool
+│   │   │   ├── ScrollTool.cs        # Scroll tool
+│   │   │   ├── ShortcutTool.cs      # Shortcut tool
+│   │   │   ├── StateTool.cs         # Desktop state tool
+│   │   │   ├── SwitchTool.cs        # App switch tool
+│   │   │   ├── TypeTool.cs          # Text input tool
+│   │   │   ├── UIElementTool.cs     # UI element operation tool
+│   │   │   └── WaitTool.cs          # Wait tool
+│   │   ├── FileSystem/          # File system tools
+│   │   │   ├── CopyFileTool.cs      # File copy tool
+│   │   │   ├── CreateDirectoryTool.cs # Directory creation tool
+│   │   │   ├── CreateFileTool.cs    # File creation tool
+│   │   │   ├── DeleteDirectoryTool.cs # Directory deletion tool
+│   │   │   ├── DeleteFileTool.cs    # File deletion tool
+│   │   │   ├── GetFileInfoTool.cs   # File info tool
+│   │   │   ├── ListDirectoryTool.cs # Directory listing tool
+│   │   │   ├── MoveFileTool.cs      # File move tool
+│   │   │   ├── ReadFileTool.cs      # File read tool
+│   │   │   ├── SearchFilesTool.cs   # File search tool
+│   │   │   └── WriteFileTool.cs     # File write tool
+│   │   └── OCR/                 # OCR recognition tools
+│   │       ├── ExtractTextFromRegionTool.cs # Region text extraction tool
+│   │       ├── ExtractTextFromScreenTool.cs # Screen text extraction tool
+│   │       ├── FindTextOnScreenTool.cs      # Screen text search tool
+│   │       └── GetTextCoordinatesTool.cs    # Text coordinate tool
+│   ├── Program.cs           # Program entry point
+│   └── Windows-MCP.Net.csproj   # Project file
+└── Windows-MCP.Net.Test/    # Test project
+    ├── DesktopToolsExtendedTest.cs  # Desktop tools extended test
+    ├── FileSystemToolsExtendedTest.cs # File system tools extended test
+    ├── OCRToolsExtendedTest.cs      # OCR tools extended test
+    ├── ToolTest.cs                  # Tool basic test
+    ├── UIElementToolTest.cs         # UI element tool test
+    └── Windows-MCP.Net.Test.csproj  # Test project file
+```
 
 ## 📦 Installation
 
@@ -343,6 +662,56 @@ This project is open source under the MIT License. See the [LICENSE](LICENSE) fi
 - [.NET Documentation](https://docs.microsoft.com/dotnet/)
 - [Windows API Documentation](https://docs.microsoft.com/windows/win32/)
 
+## 🤝 Contributing Guide
+
+We welcome community contributions! If you want to contribute to the project, please follow these steps:
+
+### Development Environment Setup
+
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/AIDotNet/Windows-MCP.Net.git
+   cd Windows-MCP.Net
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   dotnet restore
+   ```
+
+3. **Run Tests**
+   ```bash
+   dotnet test
+   ```
+
+4. **Build Project**
+   ```bash
+   dotnet build
+   ```
+
+### Contribution Process
+
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Create a Pull Request
+
+### Code Standards
+
+- Follow C# coding conventions
+- Add unit tests for new features
+- Update relevant documentation
+- Ensure all tests pass
+
+### Issue Reporting
+
+When reporting issues, please provide:
+- Operating system version
+- .NET version
+- Detailed error information
+- Steps to reproduce
+
 ## 📞 Support
 
 If you encounter issues or have suggestions, please:
@@ -350,7 +719,10 @@ If you encounter issues or have suggestions, please:
 1. Check [Issues](https://github.com/xuzeyu91/Windows-MCP.Net/issues)
 2. Create a new Issue
 3. Participate in discussions
+4. Check [Wiki](https://github.com/xuzeyu91/Windows-MCP.Net/wiki) for more help
 
 ---
 
 **Note**: This tool requires appropriate Windows permissions to perform desktop automation operations. Please ensure use in a trusted environment.
+
+**Disclaimer**: When using this tool for automation operations, please comply with relevant laws, regulations, and software usage agreements. Developers are not responsible for any consequences arising from misuse of the tool.
