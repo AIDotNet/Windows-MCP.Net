@@ -120,6 +120,7 @@ dotnet run --project src/Windows-MCP.Net.csproj
 - **截图功能**: 截取屏幕并保存到临时目录
 - **文件系统操作**: 文件和目录的创建、读取、写入、复制、移动、删除等操作
 - **OCR文字识别**: 从屏幕或指定区域提取文字，查找文字位置
+- **系统控制**: 调节屏幕亮度、系统音量、屏幕分辨率等系统设置
 - **等待控制**: 在操作间添加延迟
 
 ### 支持的工具
@@ -181,6 +182,14 @@ dotnet run --project src/Windows-MCP.Net.csproj
 | **FindElementByAutomationIdTool** | 通过自动化ID查找UI元素 |
 | **GetElementPropertiesTool** | 获取指定坐标元素的属性信息 |
 | **WaitForElementTool** | 等待指定元素出现在界面上 |
+
+## SystemControl 系统控制工具
+
+| 工具名称 | 功能描述 |
+|---------|----------|
+| **BrightnessTool** | 调节屏幕亮度，支持增减和设置具体百分比 |
+| **VolumeTool** | 调节系统音量，支持增减和设置具体百分比 |
+| **ResolutionTool** | 设置屏幕分辨率（高、中、低三档） |
 
 ## 💡 使用场景
 
