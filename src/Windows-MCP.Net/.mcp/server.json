@@ -1,12 +1,12 @@
 {
   "$schema": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json",
-  "description": "An MCP server for Windows desktop automation.",
+  "description": "A .NET-based Windows desktop automation MCP (Model Context Protocol) server that provides AI assistants with the ability to interact with the Windows desktop environment.",
   "name": "io.github.windows-mcp/windows-mcp-net",
   "packages": [
     {
       "registry_name": "nuget",
       "name": "WindowsMCP.Net",
-      "version": "0.2.5",
+      "version": "0.2.6",
       "package_arguments": [],
       "environment_variables": []
     }
@@ -16,6 +16,6 @@
     "source": "github"
   },
   "version_detail": {
-    "version": "0.2.5"
+    "version": "0.2.6"
   }
 }
