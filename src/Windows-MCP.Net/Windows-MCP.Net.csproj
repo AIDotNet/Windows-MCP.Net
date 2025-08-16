@@ -6,22 +6,19 @@
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    
-    <!-- 移除多平台RuntimeIdentifiers配置，避免打包时找不到其他平台文件的错误 -->
-    <!-- <RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers> -->
-    <!-- 移除默认RuntimeIdentifier设置，避免包名称添加平台后缀 -->
-    <!-- <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier> -->
-    
-    <!-- 优化包大小，避免包含过多native库 -->
-    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+
+    <!-- 明确指定运行时标识符，确保native依赖正确加载 -->
+    <RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+
+    <!-- 确保native库正确复制和加载 -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <PublishSingleFile>false</PublishSingleFile>
-    <!-- 让NuGet在运行时自动解析native依赖 -->
-    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
 
     <!-- Set up the NuGet package to be an MCP server -->
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>windows-mcp</ToolCommandName>
-    <PackageType>DotnetTool;McpServer</PackageType>
+    <PackageType>McpServer</PackageType>
 
     <!-- Set recommended package metadata -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -37,9 +34,18 @@
     <None Include="..\..\README.md" Pack="true" PackagePath="/" />
     <None Include="runtimeconfig.template.json" Pack="true" PackagePath="tools/$(TargetFramework)/any/" />
   </ItemGroup>
-  
-  <!-- 不直接打包native库，而是依赖NuGet的自动解析 -->
-  <!-- 这样可以避免包过大的问题，让dnx在运行时自动解析依赖 -->
+
+  <!-- 确保native库正确打包到工具包中 -->
+  <ItemGroup>
+    <Content Include="$(NuGetPackageRoot)opencvsharp4.runtime.win\**\runtimes\**"
+             Pack="true"
+             PackagePath="tools/$(TargetFramework)/any/runtimes/"
+             Condition="Exists('$(NuGetPackageRoot)opencvsharp4.runtime.win')" />
+    <Content Include="$(NuGetPackageRoot)sdcb.openvino.runtime.win-x64\**\runtimes\**"
+             Pack="true"
+             PackagePath="tools/$(TargetFramework)/any/runtimes/"
+             Condition="Exists('$(NuGetPackageRoot)sdcb.openvino.runtime.win-x64')" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.6.25358.103" />
@@ -50,24 +56,26 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.11.71" />
     <PackageReference Include="ReverseMarkdown" Version="2.0.0" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.0-preview.6.25358.103" />
-    
+
     <!-- OpenCV相关包，明确指定平台 -->
     <PackageReference Include="OpenCvSharp4" Version="4.10.0.20241108" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.10.0.20241108" />
-    
+
     <!-- OpenVINO相关包 -->
     <PackageReference Include="Sdcb.OpenVINO" Version="0.6.10" />
     <PackageReference Include="Sdcb.OpenVINO.PaddleOCR.Models.Online" Version="0.6.2" />
     <PackageReference Include="Sdcb.OpenVINO.PaddleOCR" Version="0.6.8" />
     <PackageReference Include="Sdcb.OpenVINO.runtime.win-x64" Version="2025.0.0" />
-
+    
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106" />
+    <PackageReference Include="System.Management" Version="10.0.0-preview.6.25358.103" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106" />
     <PackageReference Include="System.Management" Version="10.0.0-preview.6.25358.103" />
-    <PackageReference Include="NAudio" Version="2.2.1" />
   </ItemGroup>
- 
+
 
 </Project>
