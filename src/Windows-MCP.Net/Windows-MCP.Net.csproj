@@ -7,10 +7,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 
-    <!-- 明确指定运行时标识符，确保native依赖正确加载 -->
-    <RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers>
-    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
-
     <!-- 确保native库正确复制和加载 -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
@@ -25,7 +21,7 @@
     <PackageId>WindowsMCP.Net</PackageId>
     <PackageVersion>$(Version)</PackageVersion>
     <PackageTags>AI; MCP; server; stdio; Windows; Desktop; Automation</PackageTags>
-    <Description>An MCP server for Windows desktop automation.</Description>
+    <Description>A .NET-based Windows desktop automation MCP (Model Context Protocol) server that provides AI assistants with the ability to interact with the Windows desktop environment.</Description>
   </PropertyGroup>
 
   <!-- Include additional files for browsing the MCP server. -->
@@ -33,18 +29,6 @@
     <None Include=".mcp\server.json" Pack="true" PackagePath="/.mcp/" />
     <None Include="..\..\README.md" Pack="true" PackagePath="/" />
     <None Include="runtimeconfig.template.json" Pack="true" PackagePath="tools/$(TargetFramework)/any/" />
-  </ItemGroup>
-
-  <!-- 确保native库正确打包到工具包中 -->
-  <ItemGroup>
-    <Content Include="$(NuGetPackageRoot)opencvsharp4.runtime.win\**\runtimes\**"
-             Pack="true"
-             PackagePath="tools/$(TargetFramework)/any/runtimes/"
-             Condition="Exists('$(NuGetPackageRoot)opencvsharp4.runtime.win')" />
-    <Content Include="$(NuGetPackageRoot)sdcb.openvino.runtime.win-x64\**\runtimes\**"
-             Pack="true"
-             PackagePath="tools/$(TargetFramework)/any/runtimes/"
-             Condition="Exists('$(NuGetPackageRoot)sdcb.openvino.runtime.win-x64')" />
   </ItemGroup>
 
   <ItemGroup>
@@ -66,7 +50,7 @@
     <PackageReference Include="Sdcb.OpenVINO.PaddleOCR.Models.Online" Version="0.6.2" />
     <PackageReference Include="Sdcb.OpenVINO.PaddleOCR" Version="0.6.8" />
     <PackageReference Include="Sdcb.OpenVINO.runtime.win-x64" Version="2025.0.0" />
-    
+
     <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106" />
     <PackageReference Include="System.Management" Version="10.0.0-preview.6.25358.103" />
     <PackageReference Include="NAudio" Version="2.2.1" />
