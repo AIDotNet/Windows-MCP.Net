@@ -44,6 +44,7 @@ try
         .AddSingleton<IDesktopService, DesktopService>()
         .AddSingleton<IFileSystemService, FileSystemService>()
         .AddSingleton<IOcrService, OcrService>()
+        .AddSingleton<ISystemControlService, SystemControlService>()
         .AddMcpServer()
         .WithStdioServerTransport()
         .WithToolsFromAssembly(Assembly.GetExecutingAssembly())
