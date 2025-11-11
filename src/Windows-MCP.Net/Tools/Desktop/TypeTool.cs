@@ -37,7 +37,7 @@ public class TypeTool
         [Description("Text to type")] string text,
         [Description("Whether to clear existing text first")] bool clear = false,
         [Description("Whether to press Enter after typing")] bool pressEnter = false,
-        [Description("Whether to interpret special characters as key presses")] bool interpretSpecialCharacters = false)
+        [Description("Whether to interpret special characters as key presses (Do not escape special characters in text parameter)")] bool interpretSpecialCharacters = false)
     {
         _logger.LogInformation("Typing text at ({X},{Y}): {Text}", x, y, text);
         

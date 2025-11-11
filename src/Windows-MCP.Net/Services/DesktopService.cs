@@ -801,8 +801,10 @@ public class DesktopService : IDesktopService
 
                     if (vkCode != 0)
                     {
+                        await Task.Delay(100);
                         if (textToSend.Length > 0)
                         {
+                            // wait for previous text to be sent
                             SendTextInput(textToSend.ToString());
                             textToSend.Clear();
                         }
@@ -817,6 +819,7 @@ public class DesktopService : IDesktopService
 
                 if (textToSend.Length > 0)
                 {
+                    await Task.Delay(100);
                     SendTextInput(textToSend.ToString());
                 }
             }
