@@ -756,8 +756,9 @@ public class DesktopService : IDesktopService
     /// <param name="text">要输入的文本内容</param>
     /// <param name="clear">是否在输入前清空现有文本</param>
     /// <param name="pressEnter">是否在输入后按回车键</param>
+    /// <param name="interpretSpecialCharacters">Whether to interpret special characters as key presses</param>
     /// <returns>输入操作的结果描述</returns>
-    public async Task<string> TypeAsync(int x, int y, string text, bool clear = false, bool pressEnter = false)
+    public async Task<string> TypeAsync(int x, int y, string text, bool clear = false, bool pressEnter = false, bool interpretSpecialCharacters = false)
     {
         try
         {
@@ -777,7 +778,55 @@ public class DesktopService : IDesktopService
                 await Task.Delay(100);
             }
 
-            SendTextInput(text);
+            if (interpretSpecialCharacters)
+            {
+                var textToSend = new StringBuilder();
+                var processedText = text.Replace("\r\n", "\n");
+
+                foreach (char c in processedText)
+                {
+                    ushort vkCode = 0;
+                    switch (c)
+                    {
+                        case '\n':
+                            vkCode = VK_RETURN;
+                            break;
+                        case '\t':
+                            vkCode = VK_TAB;
+                            break;
+                        case '\b':
+                            vkCode = VK_BACK;
+                            break;
+                    }
+
+                    if (vkCode != 0)
+                    {
+                        await Task.Delay(100);
+                        if (textToSend.Length > 0)
+                        {
+                            // wait for previous text to be sent
+                            SendTextInput(textToSend.ToString());
+                            textToSend.Clear();
+                        }
+                        SendKeyboardInput(vkCode, true);
+                        SendKeyboardInput(vkCode, false);
+                    }
+                    else
+                    {
+                        textToSend.Append(c);
+                    }
+                }
+
+                if (textToSend.Length > 0)
+                {
+                    await Task.Delay(100);
+                    SendTextInput(textToSend.ToString());
+                }
+            }
+            else
+            {
+                SendTextInput(text);
+            }
 
             if (pressEnter)
             {

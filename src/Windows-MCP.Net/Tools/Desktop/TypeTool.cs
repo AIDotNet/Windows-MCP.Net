@@ -28,6 +28,7 @@ public class TypeTool
     /// <param name="text">Text to type</param>
     /// <param name="clear">Whether to clear existing text first</param>
     /// <param name="pressEnter">Whether to press Enter after typing</param>
+    /// <param name="interpretSpecialCharacters">Whether to interpret special characters as key presses</param>
     /// <returns>Result message</returns>
     [McpServerTool, Description("Type text into input fields, text areas, or focused elements")]
     public async Task<string> TypeAsync(
@@ -35,10 +36,11 @@ public class TypeTool
         [Description("Y coordinate of the target element")] int y,
         [Description("Text to type")] string text,
         [Description("Whether to clear existing text first")] bool clear = false,
-        [Description("Whether to press Enter after typing")] bool pressEnter = false)
+        [Description("Whether to press Enter after typing")] bool pressEnter = false,
+        [Description("Whether to interpret special characters as key presses (Do not escape special characters in text parameter)")] bool interpretSpecialCharacters = false)
     {
         _logger.LogInformation("Typing text at ({X},{Y}): {Text}", x, y, text);
         
-        return await _desktopService.TypeAsync(x, y, text, clear, pressEnter);
+        return await _desktopService.TypeAsync(x, y, text, clear, pressEnter, interpretSpecialCharacters);
     }
 }

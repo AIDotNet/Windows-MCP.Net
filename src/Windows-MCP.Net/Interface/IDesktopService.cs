@@ -55,8 +55,9 @@ public interface IDesktopService
     /// <param name="text">Text to type</param>
     /// <param name="clear">Whether to clear existing text first</param>
     /// <param name="pressEnter">Whether to press Enter after typing</param>
+    /// <param name="interpretSpecialCharacters">Whether to interpret special characters as key presses</param>
     /// <returns>The result message</returns>
-    Task<string> TypeAsync(int x, int y, string text, bool clear = false, bool pressEnter = false);
+    Task<string> TypeAsync(int x, int y, string text, bool clear = false, bool pressEnter = false, bool interpretSpecialCharacters = false);
 
     /// <summary>
     /// Resize or move an application window.
